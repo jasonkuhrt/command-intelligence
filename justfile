@@ -1,2 +1,2 @@
 check:
-    uv run --no-project --with jsonschema==4.26.0 python -c 'import json; from pathlib import Path; from jsonschema import Draft202012Validator, FormatChecker; p=Path("conformance"); s=json.loads((p/"schema.json").read_text()); d=json.loads((p/"cases.json").read_text()); Draft202012Validator.check_schema(s); Draft202012Validator(s, format_checker=FormatChecker()).validate(d); print("Schema valid: {} cases".format(len(d["cases"])))'
+    uv run --no-project --with jsonschema==4.26.0 python conformance/validate.py

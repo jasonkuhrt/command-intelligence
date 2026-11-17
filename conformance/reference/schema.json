@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Command Intelligence conformance suite",
+  "title": "Command Intelligence reference cases",
   "type": "object",
   "required": ["binding", "cases"],
   "properties": {
@@ -75,7 +75,8 @@
         "values": { "$ref": "#/$defs/ids" },
         "suggestions": { "type": "array", "items": { "$ref": "#/$defs/suggestion" } },
         "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
-        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+        "existing_flow": { "type": "boolean" }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind", "required"] } },
@@ -112,7 +113,7 @@
     },
     "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
     "query": {
-      "type": "object", "required": ["time", "context", "parent", "current_writer", "text"],
+      "type": "object", "required": ["time", "context", "parent", "current_writer", "text", "match_quality"],
       "properties": {
         "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
         "parent": { "type": ["string", "null"] }, "current_writer": { "$ref": "#/$defs/id" },

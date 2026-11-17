@@ -1,0 +1,1556 @@
+{
+  "binding": {
+    "time": "2030-01-01T12:00:00Z",
+    "project": "work",
+    "context": {
+      "kind": "notes"
+    },
+    "writer": "session",
+    "nodes": [
+      {
+        "id": "Note",
+        "kind": "namespace",
+        "parent": null
+      },
+      {
+        "id": "Note/open",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/edit",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/delete",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "destructive"
+      },
+      {
+        "id": "Note/move",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/open/$note",
+        "kind": "resource_slot",
+        "parent": "Note/open",
+        "required": true
+      },
+      {
+        "id": "Note/move/$mode",
+        "kind": "ordinary_slot",
+        "parent": "Note/move",
+        "required": true
+      },
+      {
+        "id": "Note/move/$tag",
+        "kind": "ordinary_slot",
+        "parent": "Note/move",
+        "required": false
+      },
+      {
+        "id": "Note/move/$note",
+        "kind": "resource_slot",
+        "parent": "Note/move",
+        "required": true
+      },
+      {
+        "id": "Native",
+        "kind": "native",
+        "parent": null,
+        "safety": "safe"
+      },
+      {
+        "id": "Flow",
+        "kind": "flow",
+        "parent": null,
+        "safety": "safe",
+        "steps": [
+          "flow.a",
+          "flow.b",
+          "flow.c"
+        ]
+      },
+      {
+        "id": "flow.a",
+        "kind": "action",
+        "parent": null,
+        "safety": "safe"
+      },
+      {
+        "id": "flow.b",
+        "kind": "action",
+        "parent": null,
+        "safety": "destructive"
+      },
+      {
+        "id": "flow.c",
+        "kind": "action",
+        "parent": null,
+        "safety": "safe"
+      }
+    ],
+    "resources": {
+      "Note/open/$note": [
+        {
+          "id": "alpha-id",
+          "label": "Alpha note"
+        },
+        {
+          "id": "beta-id",
+          "label": "Beta"
+        },
+        {
+          "id": "one-shared",
+          "label": "Shared"
+        },
+        {
+          "id": "two-shared",
+          "label": "Shared"
+        }
+      ],
+      "Note/move/$note": [
+        {
+          "id": "alpha-id",
+          "label": "Alpha note"
+        },
+        {
+          "id": "beta-id",
+          "label": "Beta"
+        },
+        {
+          "id": "one-shared",
+          "label": "Shared"
+        },
+        {
+          "id": "two-shared",
+          "label": "Shared"
+        }
+      ]
+    },
+    "tokenizer": {
+      "separators": [
+        "whitespace",
+        "|"
+      ],
+      "escape": "\\",
+      "offset_unit": "utf8-byte"
+    }
+  },
+  "cases": [
+    {
+      "id": "direct-resource",
+      "description": "A structured selection commits the stable resource ID.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/open"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "promotion-slot-origin",
+      "description": "Filling a promoted path preserves shortcut origin.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/open"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "promotion-prefix-change",
+      "description": "Leaving a promoted prefix clears shortcut origin.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "change_path",
+          "path": [
+            "Note",
+            "Note/edit"
+          ]
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/edit"
+        ]
+      }
+    },
+    {
+      "id": "promotion-manual-return",
+      "description": "Manually returning to a left prefix does not restore shortcut origin.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "change_path",
+          "path": [
+            "Note",
+            "Note/edit"
+          ]
+        },
+        {
+          "op": "change_path",
+          "path": [
+            "Note",
+            "Note/open"
+          ]
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/open"
+        ]
+      }
+    },
+    {
+      "id": "promotion-abandoned",
+      "description": "An abandoned incomplete promotion is not a committed goal.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "cancel"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": []
+      }
+    },
+    {
+      "id": "nested-no-capture",
+      "description": "Programmatic nested execution creates no extra goal signal.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        },
+        {
+          "op": "internal",
+          "path": [
+            "Note",
+            "Note/edit"
+          ]
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/edit",
+          "Note/edit"
+        ]
+      }
+    },
+    {
+      "id": "native-promotion-origin",
+      "description": "An offered native promotion records shortcut origin and only argument presence.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "native_promotions"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Native"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "native_arguments",
+          "text": "private words"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "native",
+            "recorded_path": [
+              "Native"
+            ],
+            "arguments_present": true,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Native"
+        ],
+        "forbidden_text": [
+          "private words"
+        ]
+      }
+    },
+    {
+      "id": "typed-resource",
+      "description": "A text-only surface resolves an unambiguous label to its ID.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Alpha note"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/open"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "typed-promotion-origin",
+      "description": "Text completion of a promoted resource path preserves shortcut origin.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Alpha note"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/open"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "typed-unresolved",
+      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Absent"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Absent"
+        ]
+      }
+    },
+    {
+      "id": "typed-ambiguous",
+      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Shared"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Shared"
+        ]
+      }
+    },
+    {
+      "id": "mixed-slots",
+      "description": "A skipped optional slot does not block a later resource; filled slots are recorded without values.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/move"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/move/$mode",
+          "text": "private mode"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/move/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/move",
+              "Note/move/$mode",
+              "Note/move/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/move/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/move"
+        ],
+        "forbidden_text": [
+          "private mode",
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "mixed-typed-resource",
+      "description": "A text surface can type a resource after an ordinary slot and skip an optional slot.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/move"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/move/$mode",
+          "text": "private mode"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/move/$note",
+          "text": "Alpha note"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/move",
+              "Note/move/$mode",
+              "Note/move/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/move/$note": "alpha-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/move"
+        ],
+        "forbidden_text": [
+          "private mode",
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "unavailable-direct",
+      "description": "Availability is checked after commitment on this execution path.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "available": false
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "confirmation-direct",
+      "description": "Declining a destructive confirmation blocks execution without erasing intent.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "confirmation": "decline"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "unavailable-promotion",
+      "description": "Availability is checked after commitment on this execution path.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "available": false
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "confirmation-promotion",
+      "description": "Declining a destructive confirmation blocks execution without erasing intent.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "confirmation": "decline"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "text-unavailable-direct",
+      "description": "A text command rechecks availability after commitment.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "available": false
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "text-confirmation-direct",
+      "description": "A text command respects destructive confirmation after commitment.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "confirmation": "decline"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "text-unavailable-promotion",
+      "description": "A text command rechecks availability after commitment.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "available": false
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "text-confirmation-promotion",
+      "description": "A text command respects destructive confirmation after commitment.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "confirmation": "decline"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": []
+      }
+    },
+    {
+      "id": "flow-unavailable",
+      "description": "A flow stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "unavailable_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a"
+        ]
+      }
+    },
+    {
+      "id": "flow-confirmation",
+      "description": "A flow stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "declined_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a"
+        ]
+      }
+    },
+    {
+      "id": "flow-failure",
+      "description": "A flow stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "failed_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a",
+          "flow.b"
+        ]
+      }
+    },
+    {
+      "id": "text-flow-unavailable",
+      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "unavailable_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a"
+        ]
+      }
+    },
+    {
+      "id": "text-flow-confirmation",
+      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "declined_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a"
+        ]
+      }
+    },
+    {
+      "id": "text-flow-failure",
+      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Flow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "failed_step": "flow.b"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Flow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "flow.a",
+          "flow.b"
+        ]
+      }
+    },
+    {
+      "id": "edit-middle",
+      "description": "Accepting a nested choice replaces the whole token at the cursor and preserves following spacing and text.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Tree refactor renamx  tail",
+        "cursor": 17,
+        "operation": "accept",
+        "text": "rename"
+      },
+      "expected": {
+        "line": "Tree refactor rename  tail",
+        "cursor": 20
+      }
+    },
+    {
+      "id": "edit-root",
+      "description": "Accepting a root replaces the complete token without changing the following arguments.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Trez  tail",
+        "cursor": 2,
+        "operation": "accept",
+        "text": "Tree"
+      },
+      "expected": {
+        "cursor": 4,
+        "line": "Tree  tail"
+      }
+    },
+    {
+      "id": "edit-chain",
+      "description": "A command separator ends the token; accepting preserves the following command.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Tree refactor renamx|Pulse",
+        "cursor": 17,
+        "operation": "accept",
+        "text": "rename"
+      },
+      "expected": {
+        "cursor": 20,
+        "line": "Tree refactor rename|Pulse"
+      }
+    },
+    {
+      "id": "edit-slot",
+      "description": "Accepting a note value replaces only the typed slot token, preserving the following text.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Note open Oldx  tail",
+        "cursor": 12,
+        "operation": "accept",
+        "text": "OldNote"
+      },
+      "expected": {
+        "cursor": 17,
+        "line": "Note open OldNote  tail"
+      }
+    },
+    {
+      "id": "edit-utf8",
+      "description": "Cursor positions are byte offsets and a multibyte suffix within the token is replaced completely.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Tree refactor re🚀x  tail",
+        "cursor": 16,
+        "operation": "accept",
+        "text": "rename"
+      },
+      "expected": {
+        "cursor": 20,
+        "line": "Tree refactor rename  tail"
+      }
+    },
+    {
+      "id": "type-no-rewrite",
+      "description": "Typing inserts only the typed text.",
+      "type": "edit",
+      "requires": [
+        "text_surface"
+      ],
+      "input": {
+        "line": "Note",
+        "cursor": 4,
+        "operation": "type",
+        "text": " open"
+      },
+      "expected": {
+        "line": "Note open",
+        "cursor": 9
+      }
+    },
+    {
+      "id": "horizon-boundary",
+      "description": "The declared horizon includes its cutoff and retained history reappears when the clock moves backward.",
+      "type": "cutoff",
+      "requires": [],
+      "input": {
+        "now": "2031-04-06T15:15:00Z",
+        "earlier": "2031-04-04T15:15:00Z"
+      },
+      "expected": {
+        "at_cutoff_eligible": true,
+        "before_cutoff_eligible": false,
+        "earlier_eligible": true
+      }
+    },
+    {
+      "id": "consistent-surfaces",
+      "description": "The same inputs produce the same underlying order.",
+      "type": "consistency",
+      "requires": [
+        "text_surface",
+        "structured_surface"
+      ],
+      "input": {
+        "mode": "surfaces",
+        "candidates": [
+          "Note/edit",
+          "Note/open"
+        ],
+        "history": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          },
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "same_order": true,
+        "candidates": [
+          "Note/edit",
+          "Note/open"
+        ]
+      }
+    },
+    {
+      "id": "consistent-replay",
+      "description": "The same inputs produce the same underlying order.",
+      "type": "consistency",
+      "requires": [],
+      "input": {
+        "mode": "replay",
+        "candidates": [
+          "Note/edit",
+          "Note/open"
+        ],
+        "history": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          },
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/open",
+              "Note/open/$note"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/open/$note": "alpha-id"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "same_order": true,
+        "candidates": [
+          "Note/edit",
+          "Note/open"
+        ]
+      }
+    }
+  ]
+}

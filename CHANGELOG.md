@@ -17,3 +17,5 @@
   lookback cutoff.
 - Known cmdux gap: proposal IDs are derived from steps alone, so groups with
   different projects or contexts can have the same ID.
+- Known cmdux gap: slot navigation refuses to advance past an empty optional
+  slot, including when a later slot still needs input.

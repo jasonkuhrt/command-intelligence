@@ -42,6 +42,11 @@ The binding MUST prevent ambiguous or cyclic mappings. Readers need not have
 the original index installed to replay the facts; only current candidates are
 offered.
 
+At commit, each filled resource slot MUST resolve to exactly one ID declared by
+its index, whether the user selected a candidate or typed a value. The binding
+defines matching and whether unresolved or ambiguous input is refused or kept
+open. Neither case commits or stores the input text.
+
 The inventory and ownership MUST come from the host's live declarations. A
 node can refer to a capability: an identified executable ability with its own
 implementation, availability, safety, and optional preview. Multiple nodes can
@@ -73,10 +78,19 @@ cancelled, incomplete slot has not committed an invocation.
 An intent event MUST contain facts only: a commit time, committing surface, an
 independent `origin` of `direct` or `shortcut`, project identifier, closed
 context identifiers, whether arguments were present, and whether the command is
-semantic or native. A semantic event MUST retain the node-ID path as it was at
-commit; a native event MUST retain its command root. For each selected resource
-slot, the event MUST retain a mapping from that slot's ID to the resource ID
-declared by the index. Absent optional slots have no entry. A writer or session
+semantic or native. Arguments are present when a native invocation has
+arguments, or a semantic invocation supplies a slot value or free-form input,
+including a value selected through a structured surface. Arguments already
+declared on capability steps are not invocation arguments.
+
+A semantic event MUST retain the node-ID path as it was at commit. It starts at
+the root and follows the named nodes to the action, then appends each filled slot
+ID in declared order. The last ID is the recorded target; with no filled slots,
+the action is the target. Thus a terminal slot is the target, and multiple slot
+positions form successive path entries even if the host declares them as
+siblings. A native event retains its command root as its target. For each filled
+resource slot, the event MUST retain a mapping from that slot's ID to its
+resolved resource ID. Absent optional slots have no entry. A writer or session
 identifier MUST be recoverable for replay. The log MUST NOT contain ordinary
 argument or slot values, resource labels, free-form query text, command bodies, provider or
 capability IDs, execution outcomes, or latency. Writers MUST validate declared
@@ -168,8 +182,14 @@ Mix each durable component as `4 × current project + 1 × strongest other
 project`. Mix session components independently as `6 × current project + 1 ×
 strongest other project`. Add the durable and session components. Cross-project
 influence MAY be disabled; when disabled the current-project weights still
-apply. The strongest other project is selected separately for each component;
-evidence from multiple other projects is not summed. Weights are configurable.
+apply. Compose `G`, `E`, and `F` within each project before choosing a strongest
+other project. For structural ranking, choose it separately for the composed
+context-specific transition, the relaxed global transition, and the composed
+node activation. For promotion, choose it separately for the context-specific
+path, relaxed global path, and composed node activation; for a resource candidate,
+choose it for the composed resource activation. Choose durable and session
+maxima independently. Evidence from multiple other projects is not summed.
+Weights are configurable.
 
 For a structural choice, with mixed context-specific tree transition `T`,
 relaxed tree transition `R`, and node activation `N`, the default score is
@@ -234,13 +254,16 @@ events from one writer and project, by default in the same exact context, with
 at most 180 seconds between events. A native event, a semantic event with
 arguments present, or an incomplete, missing, or unresolvable capability breaks
 a sequence, as does an existing flow. It considers at most the latest 512 events
-at or after the §6 cutoff for
-`max(window, freshness) + 30` calendar days, combines two to four steps, and
-requires support of two and a score of 180. Each occurrence adds
+at or after the §6 cutoff for `max(window, freshness) + 30` calendar days. Start
+at each eligible event and extend through consecutive eligible events until the
+combined steps would exceed four. Each prefix containing two to four steps is an
+occurrence; overlapping prefixes count independently. An event's complete steps
+are appended together, never split: an event that supplies two to four steps can
+itself be an occurrence. A group requires support of two and a score of 180. Each occurrence adds
 `20 × step count + 40 × project weight`,
 with the section 7 durable project weights. It sorts by descending score,
 descending support, descending recency, then ascending proposal ID, and returns
-at most six. The host MUST derive each proposal ID from the full group key:
+at most six after sorting all qualifying groups. The host MUST derive each proposal ID from the full group key:
 project, exact context, and complete ordered steps. IDs MUST be distinct within
 one query.
 These proposal settings are configurable; the proposal lookback does not alter
@@ -281,4 +304,7 @@ ordinary slot values. Every log's replay checks MUST cover logical writer order
 and backward clock movement. A segmented
 log MUST also check writer positions across segments. Where a handoff carries
 text, the implementation MUST check preservation of the line and cursor.
+It MUST also prime cached ranking results, change the query, candidate-index
+snapshot, and match results, and verify that the next result reflects each
+change.
 Synthetic scoring cases do not establish these boundary guarantees.

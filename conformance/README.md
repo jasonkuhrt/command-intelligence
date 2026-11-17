@@ -44,15 +44,18 @@ current session. Every commit includes its actual `surface`, independent
 `origin`, `command_kind` (semantic or native), `arguments_present`, and the
 `resource_selections` map from each selected slot ID to its resource ID.
 `recorded_path` is the root-to-target node-ID sequence recorded at commit, or
-the single root ID for a native command. A `resource_rename` fact maps `from`
+the single root ID for a native command. A semantic path appends filled slot
+IDs in declaration order, even when the slots are declared as siblings; the
+last ID is its target. A `resource_rename` fact maps `from`
 to `to` for its `slot_id` and adds no credit or active day. All event times
 precede or equal the query time.
 
-When present, `recording_tree` is the inventory when events were recorded;
-`tree` is the inventory at replay. Otherwise both are `tree`. Replay uses the
-recorded IDs and path, including removed nodes, rather than reconstructing the
-path from the current inventory. For a stable ID, a token rename does not erase
-usage. Only current choices are offered.
+`tree` is the inventory at replay. An optional `recording_tree` illustrates an
+earlier inventory; it is not a replay input and need not describe every event.
+Replay uses each event's recorded IDs and path, including removed nodes, without
+reconstructing that path from any inventory. For a stable ID, a move or token
+rename does not erase node usage or move historical edges. Only current choices
+are offered.
 
 A ranking query provides `text`. A null `parent` denotes the implicit root.
 At the root, a nonempty text identifies a case-sensitive prefix: rank only the
@@ -76,6 +79,7 @@ encoding of `[project, exact_context, steps]`, where `exact_context` is the
 ordered vector of normalized values named by the binding's `exact` fields.
 The `flow_order` case supplies unordered proposal groups with score, support,
 and recency as comparator inputs; derive IDs and return the ordered proposals.
+Flow queries return at most six proposals after sorting all qualifying groups.
 
 For text `acceptance`, apply `choice` at `line` and `cursor`; `replace_root`
 identifies root completion. When `select_from_frontier` is true, use the actual
@@ -85,6 +89,9 @@ slot-to-transient-suggestion-ID `ordinary_values`. `accept`,
 `advance`, and `commit` choose the corresponding action; `select` records the
 chosen candidate without dispatching and advances to any next slot. `back`
 clears the current slot's selection and returns to the preceding slot or parent.
+`type_commit` resolves its decoded slot `text` by exact, case-sensitive candidate
+label; tokenization and escapes apply before matching. One match commits its ID,
+while zero or multiple matches keep the slot open.
 Return the current node,
 selections, ordinary values, the ordered IDs of required slots still missing,
 and whether dispatch committed.
@@ -97,9 +104,12 @@ The expectations were generated with cmdux at
 `842338bcd4dca02d66b9a6fc03e1f7792edfa3d9` in isolated headless sessions. cmdux
 has no resource slots or independent origin, so the adapter projects resource
 IDs to synthetic nodes, computes their scores with cmdux, and supplies the
-match, rename, multi-slot navigation, selection, and optional-slot behavior. It
-maps fixture IDs to cmdux token paths, projects node and edge identities
-separately across tree changes, and normalizes logical writer positions. It
+match, rename, typed-resource resolution, multi-slot navigation, and optional-slot
+behavior. Slot paths come from cmdux's prepared capture; a skipped optional
+position before a filled slot is projected because cmdux cannot advance past
+the empty slot. For replay, the adapter
+encodes each recorded ID path independently, projects node and edge identities
+separately, and normalizes logical writer positions. It
 applies the specified horizon and flow lookback before replay: pinned cmdux
 chooses the wrong occurrence in the Lord Howe fold for both cutoffs. It projects
 proposal IDs from the group key because cmdux uses the steps alone. The

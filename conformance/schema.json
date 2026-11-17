@@ -1,110 +1,190 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Command Intelligence conformance cases",
-  "type": "array",
-  "minItems": 1,
-  "items": { "oneOf": [{ "$ref": "#/$defs/ranking" }, { "$ref": "#/$defs/acceptance" }] },
+  "title": "Command Intelligence conformance suite",
+  "type": "object",
+  "required": ["binding", "cases"],
+  "properties": {
+    "binding": { "$ref": "#/$defs/binding" },
+    "cases": { "type": "array", "minItems": 1, "items": { "oneOf": [
+      { "$ref": "#/$defs/ranking" }, { "$ref": "#/$defs/flows" },
+      { "$ref": "#/$defs/acceptance" }, { "$ref": "#/$defs/navigation" }
+    ] } }
+  },
+  "additionalProperties": false,
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
+    "ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
     "timestamp": {
-      "type": "string",
-      "format": "date-time",
+      "type": "string", "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
     },
+    "binding": {
+      "type": "object", "required": ["timezone", "tokenizer", "context", "root_matching"],
+      "properties": {
+        "timezone": { "$ref": "#/$defs/id" },
+        "tokenizer": {
+          "type": "object", "required": ["separators", "escape", "offset_unit"],
+          "properties": {
+            "separators": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/id" } },
+            "escape": { "type": "string", "minLength": 1, "maxLength": 1 },
+            "offset_unit": { "enum": ["utf8-byte", "utf16-unit", "unicode-scalar"] }
+          }, "additionalProperties": false
+        },
+        "context": {
+          "type": "object", "required": ["fixed", "resource_field", "empty_value", "exact", "facets"],
+          "properties": {
+            "fixed": { "type": "object", "additionalProperties": { "type": "string" } },
+            "resource_field": { "$ref": "#/$defs/id" },
+            "empty_value": { "$ref": "#/$defs/id" },
+            "exact": { "$ref": "#/$defs/ids" },
+            "facets": { "type": "array", "items": { "$ref": "#/$defs/ids" } }
+          }, "additionalProperties": false
+        },
+        "root_matching": { "$ref": "#/$defs/id" }
+      }, "additionalProperties": false
+    },
     "context": {
-      "type": "object",
-      "required": ["project", "resource"],
+      "type": "object", "required": ["project", "resource"],
       "properties": { "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" } },
       "additionalProperties": false
     },
+    "step": {
+      "type": "object", "required": ["capability"],
+      "properties": { "capability": { "$ref": "#/$defs/id" }, "args": { "type": "object" } },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object", "required": ["id", "label"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "label": { "type": "string" } },
+      "additionalProperties": false
+    },
     "node": {
-      "type": "object",
-      "required": ["id", "token", "kind"],
+      "type": "object", "required": ["id", "token", "kind"],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "token": { "$ref": "#/$defs/id" },
+        "id": { "$ref": "#/$defs/id" }, "token": { "$ref": "#/$defs/id" },
         "kind": { "enum": ["namespace", "leaf", "hybrid", "slot"] },
         "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
         "slot_kind": { "$ref": "#/$defs/id" },
-        "values": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+        "values": { "$ref": "#/$defs/ids" },
+        "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind"] } }
-      ],
-      "additionalProperties": false
+        { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind"] } },
+        { "if": { "properties": { "kind": { "not": { "const": "slot" } } } },
+          "then": { "not": { "anyOf": [{ "required": ["slot_kind"] }, { "required": ["values"] }, { "required": ["candidates"] }] } } },
+        { "if": { "required": ["slot_kind"], "properties": { "slot_kind": { "const": "resource" } } },
+          "then": { "required": ["candidates"], "properties": { "kind": { "const": "slot" } }, "not": { "required": ["values"] } } },
+        { "if": { "required": ["candidates"] },
+          "then": { "required": ["slot_kind"], "properties": { "slot_kind": { "const": "resource" } } } }
+      ], "additionalProperties": false
     },
     "tree": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" } },
     "event": {
-      "type": "object",
-      "required": ["node", "time", "context", "surface", "session"],
+      "type": "object", "required": ["kind", "node", "time", "context", "writer", "position"],
       "properties": {
-        "node": { "$ref": "#/$defs/id" },
-        "time": { "$ref": "#/$defs/timestamp" },
-        "context": { "$ref": "#/$defs/context" },
-        "surface": { "enum": ["dispatch", "ex", "picker", "recall", "shortcut"] },
-        "session": { "enum": ["current", "previous"] }
+        "kind": { "enum": ["commit", "resource_rename"] }, "node": { "$ref": "#/$defs/id" },
+        "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
+        "writer": { "$ref": "#/$defs/id" }, "position": { "type": "integer", "minimum": 1 },
+        "surface": { "$ref": "#/$defs/id" }, "origin": { "enum": ["direct", "shortcut"] },
+        "resource_id": { "$ref": "#/$defs/id" },
+        "from": { "$ref": "#/$defs/id" }, "to": { "$ref": "#/$defs/id" }
       },
-      "additionalProperties": false
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "commit" } } },
+          "then": { "required": ["surface", "origin"], "not": { "anyOf": [{ "required": ["from"] }, { "required": ["to"] }] } } },
+        { "if": { "properties": { "kind": { "const": "resource_rename" } } },
+          "then": { "required": ["from", "to"], "not": { "anyOf": [{ "required": ["surface"] }, { "required": ["origin"] }, { "required": ["resource_id"] }] } } }
+      ], "additionalProperties": false
+    },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "query": {
+      "type": "object", "required": ["time", "context", "parent", "current_writer"],
+      "properties": {
+        "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
+        "parent": { "type": ["string", "null"] }, "current_writer": { "$ref": "#/$defs/id" },
+        "match_quality": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }, "additionalProperties": false
+    },
+    "flow_query": {
+      "type": "object", "required": ["time", "context", "current_writer"],
+      "properties": {
+        "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
+        "current_writer": { "$ref": "#/$defs/id" }
+      }, "additionalProperties": false
     },
     "ranking": {
-      "type": "object",
-      "required": ["id", "description", "type", "tree", "events", "query", "expected"],
+      "type": "object", "required": ["id", "description", "type", "tree", "events", "query", "expected"],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "description": { "$ref": "#/$defs/id" },
-        "type": { "const": "ranking" },
-        "tree": { "$ref": "#/$defs/tree" },
-        "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
-        "query": {
-          "type": "object",
-          "required": ["time", "context", "parent"],
-          "properties": {
-            "time": { "$ref": "#/$defs/timestamp" },
-            "context": { "$ref": "#/$defs/context" },
-            "parent": { "type": ["string", "null"] }
-          },
-          "additionalProperties": false
-        },
+        "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "ranking" }, "tree": { "$ref": "#/$defs/tree" },
+        "events": { "$ref": "#/$defs/events" }, "query": { "$ref": "#/$defs/query" },
+        "timezone": { "$ref": "#/$defs/id" },
         "expected": {
-          "type": "object",
-          "required": ["choices", "promotions"],
-          "properties": {
-            "choices": { "type": "array", "items": { "$ref": "#/$defs/id" } },
-            "promotions": { "type": "array", "items": { "$ref": "#/$defs/id" } }
-          },
+          "type": "object", "required": ["choices", "promotions"],
+          "properties": { "choices": { "$ref": "#/$defs/ids" }, "promotions": { "$ref": "#/$defs/ids" } },
           "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      }, "additionalProperties": false
+    },
+    "flows": {
+      "type": "object", "required": ["id", "description", "type", "tree", "events", "query", "expected"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "flows" }, "tree": { "$ref": "#/$defs/tree" },
+        "events": { "$ref": "#/$defs/events" }, "query": { "$ref": "#/$defs/flow_query" },
+        "timezone": { "$ref": "#/$defs/id" },
+        "expected": {
+          "type": "object", "required": ["proposals"],
+          "properties": { "proposals": { "type": "array", "items": {
+            "type": "object", "required": ["project", "resource", "steps", "support", "score"],
+            "properties": {
+              "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" },
+              "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+              "support": { "type": "integer", "minimum": 1 }, "score": { "type": "integer", "minimum": 0 }
+            }, "additionalProperties": false
+          } } }, "additionalProperties": false
+        }
+      }, "additionalProperties": false
     },
     "acceptance": {
-      "type": "object",
-      "required": ["id", "description", "type", "tree", "input", "expected"],
+      "type": "object", "required": ["id", "description", "type", "tree", "input", "expected"],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
-        "description": { "$ref": "#/$defs/id" },
-        "type": { "const": "acceptance" },
-        "tree": { "$ref": "#/$defs/tree" },
+        "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "acceptance" }, "tree": { "$ref": "#/$defs/tree" },
         "input": {
-          "type": "object",
-          "required": ["line", "cursor", "choice", "replace_root", "select_from_frontier"],
+          "type": "object", "required": ["line", "cursor", "choice", "replace_root", "select_from_frontier"],
           "properties": {
-            "line": { "type": "string" },
-            "cursor": { "type": "integer", "minimum": 0 },
-            "choice": { "type": "string" },
-            "replace_root": { "type": "boolean" },
+            "line": { "type": "string" }, "cursor": { "type": "integer", "minimum": 0 },
+            "choice": { "type": "string" }, "replace_root": { "type": "boolean" },
             "select_from_frontier": { "type": "boolean" }
-          },
-          "additionalProperties": false
+          }, "additionalProperties": false
         },
         "expected": {
-          "type": "object",
-          "required": ["line", "cursor"],
+          "type": "object", "required": ["line", "cursor"],
           "properties": { "line": { "type": "string" }, "cursor": { "type": "integer", "minimum": 0 } },
           "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      }, "additionalProperties": false
+    },
+    "navigation": {
+      "type": "object", "required": ["id", "description", "type", "tree", "input", "expected"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "navigation" }, "tree": { "$ref": "#/$defs/tree" },
+        "input": {
+          "type": "object", "required": ["current", "choice", "action"],
+          "properties": {
+            "current": { "$ref": "#/$defs/id" }, "choice": { "$ref": "#/$defs/id" },
+            "action": { "enum": ["accept", "advance", "commit"] }
+          }, "additionalProperties": false
+        },
+        "expected": {
+          "type": "object", "required": ["current", "committed"],
+          "properties": { "current": { "$ref": "#/$defs/id" }, "committed": { "type": "boolean" } },
+          "additionalProperties": false
+        }
+      }, "additionalProperties": false
     }
   }
 }

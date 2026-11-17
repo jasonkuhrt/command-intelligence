@@ -17,12 +17,25 @@ result. A backward clock movement rereads still-existing history when needed.
 ## 2. Command model
 
 The command vocabulary is one semantic tree, which MAY be represented as a
-forest under an implicit root. Each node MUST have a stable semantic identity;
-aliases and labels MUST NOT become identity. A namespace groups children, a
-leaf is a terminal action, and a hybrid is executable and has children. A typed
+forest under an implicit root. Each node MUST have a stable host-declared ID;
+the binding defines its formation and lifetime. IDs need not equal tokens,
+labels, or aliases. A namespace groups children, a leaf is a terminal action,
+and a hybrid is executable and has children. A typed
 slot identifies an argument position, its kind, and whether it is required; it
 MAY provide validation and a preview. Open-ended values are not permanent
 children or node IDs.
+
+A resource slot draws candidates from a host index. Each candidate has a
+host-declared stable resource ID, a current label, and a query match quality.
+The resource ID and the slot ID together identify its usage; the label and the
+text used to find it do not. The binding defines index refresh and how identity
+survives a rename: either the host retains the ID or records an old-to-new ID
+rename fact and resolves earlier usage to the new ID. A rename fact contributes
+no usage credit or active day. It identifies the slot, old and new resource IDs,
+time, writer, and log position; replay resolves earlier usage through the rename.
+The binding MUST prevent ambiguous or cyclic mappings. Readers need not have
+the original index installed to replay the facts; only current candidates are
+offered.
 
 The inventory and ownership MUST come from the host's live declarations. A
 node can refer to a capability: an identified executable ability with its own
@@ -50,13 +63,16 @@ command records that command. Failure, unavailability after commitment, or a
 declined confirmation MUST NOT change a committed signal. An abandoned path or
 cancelled, incomplete slot has not committed an invocation.
 
-An event MUST contain facts only: a commit time, committing surface, project
-identifier, closed context identifiers, whether arguments were present, and a
-semantic node path or native command root. A writer or session identifier MUST
-be recoverable for replay. The log MUST NOT contain argument or slot values,
-free-form query text, command bodies, provider or capability IDs, execution
-outcomes, or latency. Writers MUST validate declared identifiers; readers MUST
-validate record shape without requiring the original provider to be installed.
+An intent event MUST contain facts only: a commit time, committing surface, an
+independent `origin` of `direct` or `shortcut`, project identifier, closed
+context identifiers, whether arguments were present, and a semantic node path
+or native command root. A resource-slot commit MUST also retain the selected
+resource ID declared by the index. A writer or session identifier MUST be
+recoverable for replay. The log MUST NOT contain ordinary argument or slot
+values, resource labels, free-form query text, command bodies, provider or
+capability IDs, execution outcomes, or latency. Writers MUST validate declared
+identifiers; readers MUST validate record shape without requiring the original
+provider to be installed.
 Malformed records are skipped. Storage failures MUST be reported. Reset MUST
 invalidate this writer's unrecorded captures and remove the selected channel's
 history; later commits remain recordable.
@@ -69,9 +85,9 @@ ranking. Its kinds and any diagnostic weights are host-defined.
 
 The host MUST identify the project and the working context behind a command
 surface, not the command surface itself. The semantic parent is part of a tree
-transition; resource kind and working-surface class are context facets. Context
-is a typed vector of closed identifiers. The host binding MUST define an exact
-key and a bounded, deduplicated set of facet keys.
+transition. Context is a typed vector of closed identifiers; the host binding
+MUST define its vocabulary, an exact key, and a bounded, deduplicated set of
+facet keys.
 
 Learning has a project scope and, optionally, a cross-project view derived from
 other projects. Context-specific and global evidence coexist; context is a
@@ -95,13 +111,25 @@ node, tree-edge, or path score credit. Execution counts and credit totals are
 distinct. Workflow sequences are derived from ordered events; they are not
 tree-edge credits.
 
+Each committed resource selection gives the slot root's direct credit, 100 by
+default, to its `(slot ID, resource ID)` independently of the command path.
+This includes a selection reached through a shortcut: it does not give the
+shortcut path score credit. Resource credits use the same project, context,
+active-day, and session rules as node activation, without propagation to other
+resources.
+
 ## 6. Time and session
 
-Replay MUST order events by commit time, then writer file or equivalent stable
-writer order, then position within that writer. Events older than **365 local
-calendar days** at the query time MUST be ignored; an event exactly on the
-cutoff remains. Retained events may physically remain in a live writer's log
-until safe to remove, but MUST NOT influence derived results after the cutoff.
+Replay MUST order events by time, then writer ID in lexicographic UTF-8 byte
+order, then position within that writer's log. Recency is the order of the
+relevant credited events in that replay, not timestamp alone. To calculate the
+**365-day** cutoff, take the same local wall time 365 calendar days earlier,
+using the timezone's offset on that date. If the target time falls in a clock
+gap, move it forward by the gap; if it is repeated, choose the later occurrence
+(standard time in a daylight-saving fall-back). An event at the cutoff remains;
+an older one MUST be ignored. Retained events may physically remain in a live
+writer's log until safe to remove, but MUST NOT influence derived results after
+the cutoff.
 
 Each project has active-day buckets in the host's local timezone. A project
 advances to the next active day only when it records activity on a new local
@@ -133,13 +161,18 @@ evidence from multiple other projects is not summed. Weights are configurable.
 
 For a structural choice, with mixed context-specific tree transition `T`,
 relaxed tree transition `R`, and node activation `N`, the default score is
-`8T + 3R + 2N`. `N` includes direct and propagated credit. Positive-score
-choices precede unscored choices. Order scored choices by descending score,
-then descending recency, then their original structural position. Unscored
-choices keep their original order. Ranking MUST NOT be disabled for a large
-frontier. In a typed root search, reorder only the leading block of root names
-matching the typed prefix; subsequent matches keep their original order. Recency
-breaks a tie; it is not an additive score.
+`8T + 3R + 2N`. `N` includes direct and propagated credit. The binding defines
+which choices match a query and the order of any matching groups. Within each
+ranked group, positive-score choices precede unscored choices. Order scored
+choices by descending score, then descending recency, then original structural
+position. Unscored choices keep their original order. Ranking MUST NOT be
+disabled for a large frontier. Recency breaks a tie; it is not an additive score.
+
+For each current resource-slot candidate matching the query, compute `N` from
+its own credits as node activation above, scoped to its slot. The host supplies
+a nonnegative integer match quality `M` for the query, with larger values meaning
+a better match; its binding defines the scale. Rank candidates by `N + M`, then
+resource credit recency, then index order. Candidates without usage have `N = 0`.
 
 ## 8. Promotion
 
@@ -155,16 +188,18 @@ either at least two direct dispatches are within the last five active days and
 its promotion score is positive, or at least one shortcut dispatch is within
 that freshness window. Counts are taken from the strongest single relevant
 project, not summed across projects. A recent shortcut can keep a path eligible
-after its direct credits or original events expire. Check the current prefix,
+after its direct credits or original events expire. Check the query match,
 validity, and eligibility before applying the default limit of three.
 
 For a path in each project, its context-specific path score is the greatest of
 the exact and matching facet scores; its relaxed path score is the global path
 score. Mix each across projects and session as in section 7. Promotion score is
 `6 × context-specific path + 2 × relaxed path + mixed node activation`. Sort
-eligible promotions by descending score, then descending recency, then rendered
-path. These limits and weights are configurable. Demotion follows the freshness
-gate and competition; it does not require negative credits.
+eligible promotions by descending score, then descending recency of retained
+direct path-credit events, then rendered path. Shortcut uses do not update this
+recency, even when they keep the path eligible. These limits and weights are
+configurable. Demotion follows the freshness gate and competition; it does not
+require negative credits.
 
 ## 9. Flows
 
@@ -174,28 +209,38 @@ steps. Check availability and safety before each applicable execution; execute
 in order and stop when a step fails or is unavailable. A flow and its direct
 commands share capability implementations.
 
-A proposal, if provided, MUST compare complete capability steps from the live
-inventory, including declared arguments. It MUST NOT infer argument values from
-the event log. The reference proposal algorithm uses consecutive eligible
-semantic events from one writer and project, by default in the same exact
-context, with at most 180 seconds between events. A native, incomplete, missing,
-or unresolvable capability breaks a sequence, as does an existing flow. It
+A host MAY provide flow proposals. If it does, it MUST group occurrences by
+project, the first event's exact context, and the ordered complete capability
+steps, including declared arguments. Different arguments or groups MUST NOT be
+combined. It MUST resolve steps from the live inventory and MUST NOT infer
+argument values from the event log. It MUST use consecutive eligible semantic
+events from one writer and project, by default in the same exact context, with
+at most 180 seconds between events. A native, incomplete, missing, or
+unresolvable capability breaks a sequence, as does an existing flow. It
 considers at most the latest 512 events within `max(window, freshness) + 30`
 calendar days, combines two to four steps, and requires support of two and a
-score of 180. Each occurrence adds
-`20 × step count + 40 × project weight`, with the section 7 durable project
-weights. It sorts by score, support, recency, then ID, and returns at most six.
+score of 180. Each occurrence adds `20 × step count + 40 × project weight`,
+with the section 7 durable project weights. It sorts by score, support, recency,
+then a deterministic host-defined flow ID, and returns at most six.
 These proposal settings are configurable; the proposal lookback does not alter
 the 365-day event horizon. Workflow proposals do not affect live ranking until
 explicitly represented and invoked as commands.
 
 ## 10. Safety and input
 
-Typing alone MUST NOT rewrite input. An accepted choice MUST replace exactly the
-token at the cursor, preserving text and spacing outside that token; the choice
-may expand that token into a longer semantic path. Only one component owns the
-edit on a given surface. Cursor and line MUST survive a handoff between surfaces.
-A host binding defines token boundaries and cursor units.
+A text surface has an editable line and cursor. Typing alone MUST NOT rewrite
+the line. Accepting a choice MUST replace exactly the token at the cursor and
+preserve text and spacing outside it; the choice may expand that token into a
+longer path. Only one component owns the edit. A handoff between text surfaces
+MUST preserve the line and cursor. A handoff through a structured surface MUST
+also preserve them on return, except for an accepted choice's edit. The binding
+defines tokenization and cursor units.
+
+A structured surface navigates choices without requiring a line or cursor.
+Accepting a namespace or incomplete slot advances to its choices. A hybrid
+exposes an explicit choice between advancing and dispatching. A terminal action
+or completed slot is dispatched only on commit; navigation or backtracking
+alone records no goal signal.
 
 The user may execute the text as typed, or explicitly accept a choice. Slots
 MUST be validated before an owned action executes. An unavailable action MUST
@@ -203,3 +248,14 @@ NOT execute; safety policy MAY require confirmation and show an outcome preview.
 A declined confirmation stops execution. The default safety levels are safe,
 reversible, and destructive, in increasing order; destructive actions require
 confirmation by default. Learning and promotions MUST NOT bypass these checks.
+
+## 11. Implementation boundary checks
+
+An implementation MUST test capture through every claimed commit surface,
+including its surface, origin, context, and selected identity, and verify that
+nested actions do not duplicate it and abandoned input records none. It MUST
+test persistence and replay through its actual log, including resource IDs for
+any resource slot and the exclusion of ordinary slot values. Its replay checks
+MUST cover writer positions across log segments and backward clock movement.
+Where surfaces hand off, it MUST check preservation of the line and cursor.
+Synthetic scoring cases do not establish these boundary guarantees.

@@ -1,50 +1,67 @@
 # Conformance cases
 
-[`cases.json`](cases.json) is a language-neutral array of independent cases,
-described by [`schema.json`](schema.json). A runner MUST check every case with
-the specification's default configuration and compare the entire ordered
-result with `expected`. Passing these cases does not establish every requirement
-of the specification.
+[`cases.json`](cases.json) contains a synthetic host binding and independent
+cases, described by [`schema.json`](schema.json). A runner compares the complete
+ordered result to each case's `expected` value with the specification defaults.
+Run all common ranking cases; resource cases apply when resource slots are
+supported, text or navigation cases when the respective surface is supported,
+and flow cases when flow proposals are supported. The specification's real
+surface and storage checks are required separately; these synthetic cases cannot
+prove capture, persistence, or privacy.
 
-Each case supplies its complete tree. Array order is structural order; `id` is
-the stable path identity and `token` is its spelling. Slash-separated IDs and
-`$` slot positions are fixture conventions. Node IDs are unique within a case;
-event and parent IDs refer to that tree. A slot's `values`, when present,
-are live suggestions, not children or stored facts. All fixture nodes are
-available and their terminal actions executable. No other inventory contributes
-choices. Start every case with empty history.
+## Synthetic binding
 
-For a `ranking` case:
+Use the binding declared in the suite for these cases, regardless of the host's
+own tokenizer or facets. Its IANA timezone is UTC unless a case supplies
+`timezone`.
+Its tokenizer treats unescaped ASCII whitespace and `|` as separators, a
+backslash as escaping the next byte, and cursors as zero-based UTF-8 byte
+offsets. Root matching ranks the leading case-sensitive prefix-matching block.
 
-1. Replay its events in timestamp order, preserving input order for equal times.
-   `previous` is one earlier writer session and `current` is the querying writer
-   session; the latter contributes session heat. `surface: shortcut` is a
-   dispatched, previously promoted shortcut. Other surfaces are direct commits.
-2. Use UTC for local calendar days. Each context's `project` is an opaque,
-   distinct project identity. The complete context vector is `surface=file`,
-   `surface_detail=buffer`, `filetype=resource`, `buftype=""`, `mode=n`.
-   Its exact key is the five values; its deduplicated facets are
-   `filetype:<resource>`, `surface:file`, `surface:file|detail:buffer`,
-   `surface:file|filetype:<resource>`, `buftype:*`, and `mode:n`.
-3. At `query.time` in `query.context`, rank the children of `query.parent`;
-   `null` means the implicit root. Return their IDs as `choices` and the IDs of
-   separately displayed shortcuts as `promotions`, both in display order.
+A context consists of the binding's `fixed` fields, with the case's `resource`
+as the field named by `resource_field`; `project` is a separate scope. Replace
+empty field values by `empty_value` when forming keys. The exact key is the
+ordered `exact` field tuple. Each list in `facets` forms a facet tuple including
+its field names; deduplicate equal facets. The case time is a UTC instant and
+the timezone determines local days and cutoff normalization.
 
-When an event targets a slot, a runner that records an invocation MUST also
-verify that its persisted event identifies the slot and contains none of the
-slot's suggested values. The reference adapter supplies the first suggestion as
-the transient argument and inspects the resulting log.
+Every case starts with empty history. Its `tree` is the full inventory in
+structural order. Node IDs are unique host-declared identifiers and need not be
+paths or token spellings. `token` supplies a spelling. A slot's `values` are
+ordinary live suggestions; a resource slot's `candidates` have declared IDs and
+labels. Resource IDs are distinct from node IDs and ordinary slot values.
 
-For an `acceptance` case, choose `input.choice` in the given tree and apply it
-to `input.line` at `input.cursor`. `replace_root` identifies root completion;
-when `select_from_frontier` is true, accept the actual suggestion from the slot
-frontier. Offsets are zero-based UTF-8 bytes, including the resulting cursor.
-Unescaped whitespace and `|` delimit tokens; a backslash escapes the next byte.
-Return the resulting line and cursor.
+## Runner contract
 
-The expected results were generated with the actual cmdux ranking and completion
-code at `842338bcd4dca02d66b9a6fc03e1f7792edfa3d9`, using headless Neovim and
-isolated XDG directories. The optional [reference adapter](reference/) can
-check a cmdux checkout against the committed cases via the root `justfile`'s
-`check-cmdux` recipe. Implementations of other hosts write their own runner for
-the contract above; neither Neovim nor the adapter is required for the cases.
+For ranking and flow cases, replay `events` by timestamp, writer ID in
+lexicographic UTF-8 byte order, then numeric `position`. Positions are unique
+within a writer and describe its logical log, independent of the array order or
+physical segments. `query.current_writer` identifies the current session. Every
+commit has its actual `surface` and an independent `origin`; a
+`resource_rename` fact maps `from` to `to` for its slot and adds no credit or
+active day. All event times precede or equal the query time.
+
+A ranking query returns all structural child IDs as `choices` and separately
+shown shortcut IDs as `promotions`. A null parent denotes the implicit root. A
+resource-slot parent returns current candidate IDs as `choices`; the query's
+`match_quality` gives each candidate's nonnegative integer match contribution.
+Return both arrays in display order.
+
+A flow query returns `proposals` in display order, each with its project,
+synthetic context's `resource`, complete capability `steps`, support, and score.
+The grouping uses project, exact context, and the complete ordered steps.
+
+For text `acceptance`, apply `choice` at `line` and `cursor`; `replace_root`
+identifies root completion. When `select_from_frontier` is true, use the actual
+slot suggestion. Return the resulting line and cursor. For structured
+`navigation`, apply `action` to the named choice at `current`: `advance` and
+`commit` choose the corresponding hybrid action, and `accept` selects a
+namespace. Return the resulting current node ID and whether it committed.
+
+The existing command, replay, flow, navigation, and text expectations were
+checked with cmdux at `842338bcd4dca02d66b9a6fc03e1f7792edfa3d9` in isolated
+headless sessions. That revision has no resource slots or independent origin:
+the resource cases project each resource ID to a synthetic cmdux node and add
+match quality to the real node score. The adapter normalizes logical writer
+positions and maps fixture IDs to cmdux token-path IDs. These projections yield
+expected results; they do not establish cmdux conformance to the new boundaries.

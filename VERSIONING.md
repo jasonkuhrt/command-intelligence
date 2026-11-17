@@ -1,13 +1,19 @@
 # Versioning
 
-The specification uses `MAJOR.MINOR.PATCH`, starting at 0.1.0. The rules apply
-also while the major version is zero.
+The specification uses `MAJOR.MINOR.PATCH`, starting at 0.1.0. A change to
+existing stored facts or the ranking result for the same inputs is major,
+including before 1.0. Another incompatible change to existing required
+observable behavior is also major.
 
-- **Major:** stored facts or the ranking result for the same inputs change. An
-  incompatible change to another required observable behavior is also major.
-- **Minor:** a concept or rule is added without changing existing results.
-- **Patch:** wording changes without changing behavior.
+- Before 1.0, a new mandatory requirement that does not change existing stored
+  facts or results is minor; from 1.0 onward it is major. An optional new
+  concept or rule that leaves existing results unchanged is minor.
+- Wording, fixture, and runner corrections that leave normative results and
+  requirements unchanged are patches.
 
 An implementation MUST declare the specification version it conforms to. A
-conformance claim covers the specification and its applicable host binding; the
-fixtures are checks of selected behavior, not a substitute for the specification.
+new mandatory requirement may require an implementation to change and may
+affect its consumers, even when existing results are unchanged. A patch does
+not change the contract for consumers; a corrected fixture can expose an
+implementation's existing nonconformance. A conformance claim covers the
+specification and applicable host binding, not just its fixtures.

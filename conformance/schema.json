@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Command Intelligence conformance cases",
+  "type": "array",
+  "minItems": 1,
+  "items": { "oneOf": [{ "$ref": "#/$defs/ranking" }, { "$ref": "#/$defs/acceptance" }] },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "context": {
+      "type": "object",
+      "required": ["project", "resource"],
+      "properties": { "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" } },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "token", "kind"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "token": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["namespace", "leaf", "hybrid", "slot"] },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "slot_kind": { "$ref": "#/$defs/id" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind"] } }
+      ],
+      "additionalProperties": false
+    },
+    "tree": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" } },
+    "event": {
+      "type": "object",
+      "required": ["node", "time", "context", "surface", "session"],
+      "properties": {
+        "node": { "$ref": "#/$defs/id" },
+        "time": { "$ref": "#/$defs/timestamp" },
+        "context": { "$ref": "#/$defs/context" },
+        "surface": { "enum": ["dispatch", "ex", "picker", "recall", "shortcut"] },
+        "session": { "enum": ["current", "previous"] }
+      },
+      "additionalProperties": false
+    },
+    "ranking": {
+      "type": "object",
+      "required": ["id", "description", "type", "tree", "events", "query", "expected"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "ranking" },
+        "tree": { "$ref": "#/$defs/tree" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+        "query": {
+          "type": "object",
+          "required": ["time", "context", "parent"],
+          "properties": {
+            "time": { "$ref": "#/$defs/timestamp" },
+            "context": { "$ref": "#/$defs/context" },
+            "parent": { "type": ["string", "null"] }
+          },
+          "additionalProperties": false
+        },
+        "expected": {
+          "type": "object",
+          "required": ["choices", "promotions"],
+          "properties": {
+            "choices": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+            "promotions": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["id", "description", "type", "tree", "input", "expected"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": { "$ref": "#/$defs/id" },
+        "type": { "const": "acceptance" },
+        "tree": { "$ref": "#/$defs/tree" },
+        "input": {
+          "type": "object",
+          "required": ["line", "cursor", "choice", "replace_root", "select_from_frontier"],
+          "properties": {
+            "line": { "type": "string" },
+            "cursor": { "type": "integer", "minimum": 0 },
+            "choice": { "type": "string" },
+            "replace_root": { "type": "boolean" },
+            "select_from_frontier": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "expected": {
+          "type": "object",
+          "required": ["line", "cursor"],
+          "properties": { "line": { "type": "string" }, "cursor": { "type": "integer", "minimum": 0 } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

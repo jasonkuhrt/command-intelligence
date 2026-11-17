@@ -1,0 +1,342 @@
+[
+  {
+    "id": "context-lua",
+    "description": "Exact context can put a less frequent local action ahead of a more frequent action learned in another resource kind.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "python"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "python"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/refactor", "Tree/docs"], "promotions": []}
+  },
+  {
+    "id": "context-python",
+    "description": "Changing the resource context selects the habit learned there.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "python"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "python"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "python"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/docs", "Tree/refactor"], "promotions": []}
+  },
+  {
+    "id": "surface-ex",
+    "description": "An Ex commit and a picker commit contribute the same intent credit; these uses put refactor first.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/docs", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "ex", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/refactor", "Tree/docs"], "promotions": []}
+  },
+  {
+    "id": "surface-picker",
+    "description": "Swapping the commit surfaces leaves the same frontier order.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/docs", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "ex", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "ex", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"promotions": [], "choices": ["Tree/refactor", "Tree/docs"]}
+  },
+  {
+    "id": "scope-max",
+    "description": "One local use outweighs three uses in each of two other projects because only the strongest other project contributes.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/docs", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "other-a", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:02:00Z", "context": {"project": "other-a", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:03:00Z", "context": {"project": "other-a", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:04:00Z", "context": {"project": "other-b", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:05:00Z", "context": {"project": "other-b", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:06:00Z", "context": {"project": "other-b", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/docs", "Tree/refactor"], "promotions": []}
+  },
+  {
+    "id": "session-heat",
+    "description": "Current-session heat can lift an earlier equal-use choice above a more recent choice from another session.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "current"},
+      {"node": "Tree/refactor/extract", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree/refactor"},
+    "expected": {"choices": ["Tree/refactor/rename", "Tree/refactor/extract"], "promotions": []}
+  },
+  {
+    "id": "session-recency",
+    "description": "Without current-session heat, equal-score choices use event recency.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/extract", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree/refactor"},
+    "expected": {"choices": ["Tree/refactor/extract", "Tree/refactor/rename"], "promotions": []}
+  },
+  {
+    "id": "decay-recent",
+    "description": "One newer use does not outweigh five direct uses only one active day old.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:04:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-02T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-02T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"promotions": [], "choices": ["Tree/refactor", "Tree/docs"]}
+  },
+  {
+    "id": "decay-active",
+    "description": "Twenty-one later active days remove old score even though the calendar gap itself is not a penalty.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:04:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-02T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-03T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-04T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-05T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-06T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-07T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-08T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-09T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-10T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-11T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-12T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-13T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-14T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-15T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-16T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-17T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-18T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-19T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-20T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-21T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-22T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2030-01-22T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-22T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/docs", "Tree/refactor"], "promotions": []}
+  },
+  {
+    "id": "horizon-inclusive",
+    "description": "A dispatch exactly 365 calendar days old still contributes after an idle gap.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2031-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/refactor", "Tree/docs"], "promotions": []}
+  },
+  {
+    "id": "horizon-expired",
+    "description": "A dispatch older than 365 calendar days contributes no score even without intervening activity.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2031-01-02T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "Tree"},
+    "expected": {"choices": ["Tree/docs", "Tree/refactor"], "promotions": []}
+  },
+  {
+    "id": "promotion-first-use",
+    "description": "A single direct dispatch does not meet the default promotion threshold.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null},
+    "expected": {"choices": ["Tree", "Pulse"], "promotions": []}
+  },
+  {
+    "id": "promotion-fresh",
+    "description": "Two direct executions promote a valid path while they are within five active days.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-02T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-03T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-04T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-05T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-05T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null},
+    "expected": {"choices": ["Pulse", "Tree"], "promotions": ["Tree/refactor/rename"]}
+  },
+  {
+    "id": "promotion-stale",
+    "description": "A promotion disappears once its direct executions are five active days old.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-02T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-03T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-04T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-05T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Pulse", "time": "2030-01-06T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-06T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null},
+    "expected": {"choices": ["Pulse", "Tree"], "promotions": []}
+  },
+  {
+    "id": "promotion-slot",
+    "description": "A repeated invocation with a typed slot promotes the path to the slot without storing its value.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Note", "token": "Note", "kind": "namespace", "children": [{"id": "Note/open", "token": "open", "kind": "namespace", "children": [{"id": "Note/open/$note", "token": "$note", "kind": "slot", "slot_kind": "note", "values": ["OldNote"]}]}]}
+    ],
+    "events": [
+      {"node": "Note/open/$note", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Note/open/$note", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null},
+    "expected": {"promotions": ["Note/open/$note"], "choices": ["Note"]}
+  },
+  {
+    "id": "adopted-shortcut",
+    "description": "A previously promoted shortcut remains eligible after original direct events leave the 365-day horizon; a recently repeated path ranks above it.",
+    "type": "ranking",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "events": [
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/refactor/rename", "time": "2030-12-27T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "shortcut", "session": "previous"},
+      {"node": "Tree/docs", "time": "2031-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"},
+      {"node": "Tree/docs", "time": "2031-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "session": "previous"}
+    ],
+    "query": {"time": "2031-01-02T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null},
+    "expected": {"promotions": ["Tree/docs", "Tree/refactor/rename"], "choices": ["Tree", "Pulse"]}
+  },
+  {
+    "id": "edit-middle",
+    "description": "Accepting a nested choice replaces the whole token at the cursor and preserves following spacing and text.",
+    "type": "acceptance",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "input": {"line": "Tree refactor renamx  tail", "cursor": 17, "choice": "rename", "replace_root": false, "select_from_frontier": false},
+    "expected": {"cursor": 20, "line": "Tree refactor rename  tail"}
+  },
+  {
+    "id": "edit-root",
+    "description": "Accepting a root replaces the complete token without changing the following arguments.",
+    "type": "acceptance",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "input": {"line": "Trez  tail", "cursor": 2, "choice": "Tree", "replace_root": true, "select_from_frontier": false},
+    "expected": {"line": "Tree  tail", "cursor": 4}
+  },
+  {
+    "id": "edit-chain",
+    "description": "A command separator ends the token; accepting preserves the following command.",
+    "type": "acceptance",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "input": {"line": "Tree refactor renamx|Pulse", "cursor": 17, "choice": "rename", "replace_root": false, "select_from_frontier": false},
+    "expected": {"line": "Tree refactor rename|Pulse", "cursor": 20}
+  },
+  {
+    "id": "edit-slot",
+    "description": "Accepting a note value replaces only the typed slot token, preserving the following text.",
+    "type": "acceptance",
+    "tree": [
+      {"id": "Note", "token": "Note", "kind": "namespace", "children": [{"id": "Note/open", "token": "open", "kind": "namespace", "children": [{"id": "Note/open/$note", "token": "$note", "kind": "slot", "slot_kind": "note", "values": ["OldNote"]}]}]}
+    ],
+    "input": {"line": "Note open Oldx  tail", "cursor": 12, "choice": "OldNote", "replace_root": false, "select_from_frontier": true},
+    "expected": {"line": "Note open OldNote  tail", "cursor": 17}
+  },
+  {
+    "id": "edit-utf8",
+    "description": "Cursor positions are byte offsets and a multibyte suffix within the token is replaced completely.",
+    "type": "acceptance",
+    "tree": [
+      {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+      {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+    ],
+    "input": {"line": "Tree refactor re🚀x  tail", "cursor": 16, "choice": "rename", "replace_root": false, "select_from_frontier": false},
+    "expected": {"cursor": 20, "line": "Tree refactor rename  tail"}
+  }
+]

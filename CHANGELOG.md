@@ -13,3 +13,7 @@
 - Known cmdux gap: at the repeated local time in the Lord Howe fixture, the
   pinned implementation chooses the earlier cutoff instead of the required later
   occurrence.
+- Known cmdux gap: the same repeated-time disagreement also affects the flow
+  lookback cutoff.
+- Known cmdux gap: proposal IDs are derived from steps alone, so groups with
+  different projects or contexts can have the same ID.

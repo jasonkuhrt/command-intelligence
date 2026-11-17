@@ -57,41 +57,52 @@ usage. Only current choices are offered.
 A ranking query provides `text`. A null `parent` denotes the implicit root.
 At the root, a nonempty text identifies a case-sensitive prefix: rank only the
 leading contiguous block of matching roots, and retain the remaining roots in
-structural order. When supplied, `matches` states each candidate's match status,
-and `groups` describes the pre-ranking groups in order, including whether a
-group is ranked. Root groups are derived from the query and tokens, not simply
-copied into the result. Return all resulting structural IDs in `choices`,
-separately shown shortcut IDs in `promotions`, and, when groups are given, each
-resulting named group in `groups`. The group items concatenate to `choices`.
+structural order. Derive each root's match status and the groups from the query
+and tokens; neither is an input. Return the match-status map as `matches` and
+the ranked `prefix` and unranked `rest` groups as `groups`. Their items
+concatenate to `choices`. Return separately shown shortcuts in `promotions`.
 
-For a resource-slot parent, return only current candidates whose `matches` value
-is true; an omitted match status means true. `match_quality` maps candidate IDs
-to nonnegative integers. A false match remains excluded even if its quality is
-zero. For an ordinary-slot parent, return the transient `suggestions` IDs in
+For a resource-slot parent, `matches` supplies the index's match status. Return
+only current candidates whose value is true; an omitted status means true.
+`match_quality` maps candidate IDs to nonnegative integers. A false match remains
+excluded even if its quality is zero. For an ordinary-slot parent, return the transient `suggestions` IDs in
 display order, using the slot-position score, not persisted suggestion values.
 
-A flow query returns `proposals` in display order, each with its project,
+A flow query returns `proposals` in display order, each with its `id`, project,
 synthetic context's `resource`, complete capability `steps`, support, and score.
-The grouping uses project, exact context, and the complete ordered steps.
+The grouping uses project, exact context, and the complete ordered steps. The
+synthetic proposal ID is the UTF-8 JSON Canonicalization Scheme (RFC 8785)
+encoding of `[project, exact_context, steps]`, where `exact_context` is the
+ordered vector of normalized values named by the binding's `exact` fields.
+The `flow_order` case supplies unordered proposal groups with score, support,
+and recency as comparator inputs; derive IDs and return the ordered proposals.
 
 For text `acceptance`, apply `choice` at `line` and `cursor`; `replace_root`
 identifies root completion. When `select_from_frontier` is true, use the actual
 slot suggestion. Return the resulting line and cursor. Structured `navigation`
-starts at `current` with the given slot-to-resource `selections`. `accept`,
+starts at `current` with the given slot-to-resource `selections` and the
+slot-to-transient-suggestion-ID `ordinary_values`. `accept`,
 `advance`, and `commit` choose the corresponding action; `select` records the
-chosen candidate without dispatching, and `back` clears the current slot's
-selection and returns to its parent. Return the current node, selections, the
-ordered IDs of required slots still missing, and whether dispatch committed.
+chosen candidate without dispatching and advances to any next slot. `back`
+clears the current slot's selection and returns to the preceding slot or parent.
+Return the current node,
+selections, ordinary values, the ordered IDs of required slots still missing,
+and whether dispatch committed.
 Only a commit includes the selections as `event_resources`; otherwise that map
-is empty. An absent optional slot does not block commit.
+is empty. Where `event` is expected, return the shown event-fact projection or
+null; ordinary values never appear in it. The boundary checks verify that the
+complete stored event excludes them. An absent optional slot does not block commit.
 
 The expectations were generated with cmdux at
 `842338bcd4dca02d66b9a6fc03e1f7792edfa3d9` in isolated headless sessions. cmdux
 has no resource slots or independent origin, so the adapter projects resource
 IDs to synthetic nodes, computes their scores with cmdux, and supplies the
-match, rename, selection, and optional-slot behavior. It maps fixture IDs to
-cmdux token paths and projects stable identity across tree changes. It also
-normalizes logical writer positions and applies the specified calendar horizon
-before replay: pinned cmdux itself chooses the wrong occurrence in the Lord Howe
-fold. These projections generate expectations; they do not establish native
-cmdux conformance to those boundaries.
+match, rename, multi-slot navigation, selection, and optional-slot behavior. It
+maps fixture IDs to cmdux token paths, projects node and edge identities
+separately across tree changes, and normalizes logical writer positions. It
+applies the specified horizon and flow lookback before replay: pinned cmdux
+chooses the wrong occurrence in the Lord Howe fold for both cutoffs. It projects
+proposal IDs from the group key because cmdux uses the steps alone. The
+`flow_order` case exercises the same comparator with synthetic tied candidates.
+These projections generate expectations; they do not establish native cmdux
+conformance to those boundaries.

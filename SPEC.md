@@ -180,6 +180,9 @@ choices by descending score, then descending recency, then ascending original
 structural position. Unscored choices keep their original order. Ranking MUST NOT
 be disabled for a large frontier. Recency breaks a tie; it is not an additive score.
 
+Ordinary-slot suggestions use the score of the slot position, not the suggested
+value. Suggestions tied at that position retain the provider's order.
+
 For each current resource-slot candidate matching the query, compute `N` from
 its own credits as node activation above, scoped to its slot. The host supplies
 a nonnegative integer match quality `M` for the query, with larger values meaning
@@ -228,16 +231,18 @@ steps, including declared arguments. Different arguments or groups MUST NOT be
 combined. It MUST resolve steps from the live inventory and MUST NOT infer
 argument values from the event log. It MUST use consecutive eligible semantic
 events from one writer and project, by default in the same exact context, with
-at most 180 seconds between events. A native, incomplete, missing, or
-unresolvable capability breaks a sequence, as does an existing flow. It
-considers at most the latest 512 events at or after the §6 cutoff for
+at most 180 seconds between events. A native event, a semantic event with
+arguments present, or an incomplete, missing, or unresolvable capability breaks
+a sequence, as does an existing flow. It considers at most the latest 512 events
+at or after the §6 cutoff for
 `max(window, freshness) + 30` calendar days, combines two to four steps, and
 requires support of two and a score of 180. Each occurrence adds
 `20 × step count + 40 × project weight`,
 with the section 7 durable project weights. It sorts by descending score,
-descending support, descending recency, then ascending deterministic host-defined
-flow ID, and returns at most six. The host MUST assign distinct IDs to distinct
-proposals in the same result.
+descending support, descending recency, then ascending proposal ID, and returns
+at most six. The host MUST derive each proposal ID from the full group key:
+project, exact context, and complete ordered steps. IDs MUST be distinct within
+one query.
 These proposal settings are configurable; the proposal lookback does not alter
 the 365-day event horizon. Workflow proposals do not affect live ranking until
 explicitly represented and invoked as commands.
@@ -270,9 +275,10 @@ confirmation by default. Learning and promotions MUST NOT bypass these checks.
 An implementation MUST test capture through every claimed commit surface,
 including its surface, origin, context, and selected identity, and verify that
 nested actions do not duplicate it and abandoned input records none. It MUST
-test persistence and replay through its actual log, including resource IDs for
-any resource slot and the exclusion of ordinary slot values. Every log's replay
-checks MUST cover logical writer order and backward clock movement. A segmented
+test persistence and replay through its actual log, including command kind,
+argument presence, resource IDs for any resource slot, and the exclusion of
+ordinary slot values. Every log's replay checks MUST cover logical writer order
+and backward clock movement. A segmented
 log MUST also check writer positions across segments. Where a handoff carries
 text, the implementation MUST check preservation of the line and cursor.
 Synthetic scoring cases do not establish these boundary guarantees.

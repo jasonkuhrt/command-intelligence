@@ -711,7 +711,7 @@
         {"kind": "commit", "time": "2030-01-01T12:31:00Z", "context": {"project": "other", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 14, "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}}
       ],
       "query": {"time": "2030-01-01T12:50:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
-      "expected": {"proposals": [{"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}, {"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 3, "score": 240}]}
+      "expected": {"proposals": [{"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"python\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 3, "score": 240, "id": "[\"other\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]}
     },
     {
       "id": "flow-step-arguments",
@@ -731,7 +731,7 @@
         {"kind": "commit", "time": "2030-01-01T12:16:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 8, "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}}
       ],
       "query": {"time": "2030-01-01T12:50:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
-      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "y"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}]}
+      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "y"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"y\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]}
     },
     {
       "id": "navigate-namespace",
@@ -741,8 +741,8 @@
         {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
         {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
       ],
-      "input": {"current": "Tree", "choice": "Tree/refactor", "action": "accept", "selections": {}},
-      "expected": {"current": "Tree/refactor", "committed": false, "selections": {}, "missing": [], "event_resources": {}}
+      "input": {"current": "Tree", "choice": "Tree/refactor", "action": "accept", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "Tree/refactor", "committed": false, "selections": {}, "missing": [], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-leaf",
@@ -752,8 +752,8 @@
         {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
         {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
       ],
-      "input": {"current": "Tree", "choice": "Tree/docs", "action": "commit", "selections": {}},
-      "expected": {"current": "Tree/docs", "committed": true, "selections": {}, "missing": [], "event_resources": {}}
+      "input": {"current": "Tree", "choice": "Tree/docs", "action": "commit", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "Tree/docs", "committed": true, "selections": {}, "missing": [], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-hybrid-advance",
@@ -762,8 +762,8 @@
       "tree": [
         {"id": "Work", "token": "Work", "kind": "namespace", "children": [{"id": "Work/build", "token": "build", "kind": "hybrid", "children": [{"id": "Work/build/full", "token": "full", "kind": "leaf"}]}]}
       ],
-      "input": {"current": "Work", "choice": "Work/build", "action": "advance", "selections": {}},
-      "expected": {"current": "Work/build", "committed": false, "selections": {}, "missing": [], "event_resources": {}}
+      "input": {"current": "Work", "choice": "Work/build", "action": "advance", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "Work/build", "committed": false, "selections": {}, "missing": [], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-hybrid-commit",
@@ -772,8 +772,8 @@
       "tree": [
         {"id": "Work", "token": "Work", "kind": "namespace", "children": [{"id": "Work/build", "token": "build", "kind": "hybrid", "children": [{"id": "Work/build/full", "token": "full", "kind": "leaf"}]}]}
       ],
-      "input": {"current": "Work", "choice": "Work/build", "action": "commit", "selections": {}},
-      "expected": {"current": "Work/build", "committed": true, "selections": {}, "missing": [], "event_resources": {}}
+      "input": {"current": "Work", "choice": "Work/build", "action": "commit", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "Work/build", "committed": true, "selections": {}, "missing": [], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "replay-current-writer-earlier",
@@ -898,21 +898,21 @@
         {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["root-c"], "arguments_present": false, "resource_selections": {}, "position": 3},
         {"kind": "commit", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["root-c"], "arguments_present": false, "resource_selections": {}, "position": 4}
       ],
-      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null, "current_writer": "zz", "text": "Tra", "matches": {"root-a": true, "root-b": true, "other": false, "root-c": true}, "groups": [{"name": "prefix", "ranked": true, "items": ["root-a", "root-b"]}, {"name": "rest", "ranked": false, "items": ["other", "root-c"]}]},
-      "expected": {"choices": ["root-b", "root-a", "other", "root-c"], "promotions": [], "groups": [{"name": "prefix", "items": ["root-b", "root-a"]}, {"name": "rest", "items": ["other", "root-c"]}]}
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null, "current_writer": "zz", "text": "Tra"},
+      "expected": {"choices": ["root-b", "root-a", "other", "root-c"], "promotions": [], "groups": [{"name": "prefix", "items": ["root-b", "root-a"], "ranked": true}, {"name": "rest", "items": ["other", "root-c"], "ranked": false}], "matches": {"root-a": true, "root-b": true, "other": false, "root-c": true}}
     },
     {
       "id": "ordinary-slot-frontier",
-      "description": "Ordinary slot suggestions have transient fixture IDs and share the slot-position usage score.",
+      "description": "Ordinary suggestions share slot-position score and retain provider order even when values would sort differently.",
       "type": "ranking",
       "tree": [
-        {"id": "buffer-root", "token": "Bufferish", "kind": "namespace", "children": [{"id": "buffer-goto", "token": "goto", "kind": "namespace", "children": [{"id": "buffer-slot", "token": "$buffer", "kind": "slot", "slot_kind": "number", "required": true, "suggestions": [{"id": "suggestion-three", "value": "3"}, {"id": "suggestion-eight", "value": "8"}]}]}]}
+        {"id": "buffer-root", "token": "Bufferish", "kind": "namespace", "children": [{"id": "buffer-goto", "token": "goto", "kind": "namespace", "children": [{"id": "buffer-slot", "token": "$buffer", "kind": "slot", "slot_kind": "number", "required": true, "suggestions": [{"id": "suggestion-eight", "value": "8"}, {"id": "suggestion-three", "value": "3"}]}]}]}
       ],
       "events": [
         {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["buffer-root", "buffer-goto", "buffer-slot"], "arguments_present": true, "resource_selections": {}, "position": 1}
       ],
       "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "buffer-slot", "current_writer": "zz", "text": ""},
-      "expected": {"choices": ["suggestion-three", "suggestion-eight"], "promotions": []}
+      "expected": {"choices": ["suggestion-eight", "suggestion-three"], "promotions": []}
     },
     {
       "id": "resource-nonmatch",
@@ -946,7 +946,7 @@
       "description": "One invocation records and credits its source and destination resource IDs independently.",
       "type": "ranking",
       "tree": [
-        {"id": "move-root", "token": "Move", "kind": "namespace", "children": [{"id": "move-action", "token": "transfer", "kind": "hybrid", "children": [{"id": "source-slot", "token": "$source", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "NoteA"}, {"id": "note-b", "label": "NoteB"}]}, {"id": "dest-slot", "token": "$destination", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "folder-a", "label": "FolderA"}, {"id": "folder-b", "label": "FolderB"}]}]}]}
+        {"id": "move-root", "token": "Move", "kind": "namespace", "children": [{"id": "move-action", "token": "transfer", "kind": "hybrid", "children": [{"id": "source-slot", "token": "$source", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-b", "label": "NoteB"}, {"id": "note-a", "label": "NoteA"}]}, {"id": "dest-slot", "token": "$destination", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "folder-a", "label": "FolderA"}, {"id": "folder-b", "label": "FolderB"}]}]}]}
       ],
       "events": [
         {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["move-root", "move-action"], "arguments_present": true, "resource_selections": {"source-slot": "note-a", "dest-slot": "folder-b"}, "position": 1},
@@ -961,7 +961,7 @@
       "description": "The same invocations also credit the destination slot for each committed selection.",
       "type": "ranking",
       "tree": [
-        {"id": "move-root", "token": "Move", "kind": "namespace", "children": [{"id": "move-action", "token": "transfer", "kind": "hybrid", "children": [{"id": "source-slot", "token": "$source", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "NoteA"}, {"id": "note-b", "label": "NoteB"}]}, {"id": "dest-slot", "token": "$destination", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "folder-a", "label": "FolderA"}, {"id": "folder-b", "label": "FolderB"}]}]}]}
+        {"id": "move-root", "token": "Move", "kind": "namespace", "children": [{"id": "move-action", "token": "transfer", "kind": "hybrid", "children": [{"id": "source-slot", "token": "$source", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-b", "label": "NoteB"}, {"id": "note-a", "label": "NoteA"}]}, {"id": "dest-slot", "token": "$destination", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "folder-a", "label": "FolderA"}, {"id": "folder-b", "label": "FolderB"}]}]}]}
       ],
       "events": [
         {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["move-root", "move-action"], "arguments_present": true, "resource_selections": {"source-slot": "note-a", "dest-slot": "folder-b"}, "position": 1},
@@ -1057,7 +1057,7 @@
         {"kind": "commit", "time": "2030-01-09T09:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 4}
       ],
       "query": {"time": "2030-03-01T08:00:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
-      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}]}
+      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]}
     },
     {
       "id": "flow-lookback-expired",
@@ -1099,7 +1099,7 @@
         {"kind": "commit", "time": "2030-01-01T12:31:00Z", "context": {"project": "work", "resource": "python"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 14}
       ],
       "query": {"time": "2030-01-01T12:40:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
-      "expected": {"proposals": [{"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 5, "score": 400}, {"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400}]}
+      "expected": {"proposals": [{"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 5, "score": 400, "id": "[\"other\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"python\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]}
     },
     {
       "id": "promotion-utf8-order",
@@ -1126,8 +1126,8 @@
       "tree": [
         {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": true}]}]}
       ],
-      "input": {"current": "note-slot", "action": "select", "selections": {}, "choice": "alpha-id"},
-      "expected": {"current": "note-slot", "committed": false, "selections": {"note-slot": "alpha-id"}, "missing": [], "event_resources": {}}
+      "input": {"current": "note-slot", "action": "select", "selections": {}, "choice": "alpha-id", "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": false, "selections": {"note-slot": "alpha-id"}, "missing": [], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-resource-missing",
@@ -1136,8 +1136,8 @@
       "tree": [
         {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": true}]}]}
       ],
-      "input": {"current": "note-slot", "action": "commit", "selections": {}},
-      "expected": {"current": "note-slot", "committed": false, "selections": {}, "missing": ["note-slot"], "event_resources": {}}
+      "input": {"current": "note-slot", "action": "commit", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": false, "selections": {}, "missing": ["note-slot"], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-resource-commit",
@@ -1146,8 +1146,8 @@
       "tree": [
         {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": true}]}]}
       ],
-      "input": {"current": "note-slot", "action": "commit", "selections": {"note-slot": "alpha-id"}},
-      "expected": {"current": "note-slot", "committed": true, "selections": {"note-slot": "alpha-id"}, "missing": [], "event_resources": {"note-slot": "alpha-id"}}
+      "input": {"current": "note-slot", "action": "commit", "selections": {"note-slot": "alpha-id"}, "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": true, "selections": {"note-slot": "alpha-id"}, "missing": [], "event_resources": {"note-slot": "alpha-id"}, "ordinary_values": {}}
     },
     {
       "id": "navigate-resource-back",
@@ -1156,8 +1156,8 @@
       "tree": [
         {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": true}]}]}
       ],
-      "input": {"current": "note-slot", "action": "back", "selections": {"note-slot": "alpha-id"}},
-      "expected": {"current": "note-open", "committed": false, "selections": {}, "missing": ["note-slot"], "event_resources": {}}
+      "input": {"current": "note-slot", "action": "back", "selections": {"note-slot": "alpha-id"}, "ordinary_values": {}},
+      "expected": {"current": "note-open", "committed": false, "selections": {}, "missing": ["note-slot"], "event_resources": {}, "ordinary_values": {}}
     },
     {
       "id": "navigate-optional-resource",
@@ -1166,8 +1166,308 @@
       "tree": [
         {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": false}]}]}
       ],
-      "input": {"current": "note-slot", "action": "commit", "selections": {}},
-      "expected": {"current": "note-slot", "committed": true, "selections": {}, "missing": [], "event_resources": {}}
+      "input": {"current": "note-slot", "action": "commit", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": true, "selections": {}, "missing": [], "event_resources": {}, "ordinary_values": {}}
+    },
+    {
+      "id": "replay-moved-node",
+      "description": "A moved node keeps its own credit under the same stable ID.",
+      "type": "ranking",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}, {"id": "moved", "token": "move", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": []}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "new", "current_writer": "zz", "text": ""},
+      "expected": {"choices": ["moved", "other"], "promotions": []}
+    },
+    {
+      "id": "replay-moved-current-writer",
+      "description": "A moved node retains its current-writer session heat under its stable ID.",
+      "type": "ranking",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}, {"id": "moved", "token": "move", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": []}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "new", "current_writer": "a", "text": ""},
+      "expected": {"choices": ["moved", "other"], "promotions": []}
+    },
+    {
+      "id": "replay-moved-edges",
+      "description": "A moved node leaves historical edge and ancestor credit at its old parent.",
+      "type": "ranking",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}, {"id": "moved", "token": "move", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": []}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "root", "current_writer": "zz", "text": ""},
+      "expected": {"choices": ["old", "new"], "promotions": []}
+    },
+    {
+      "id": "replay-moved-no-new-edge",
+      "description": "A move does not credit the new parent edge for historical uses.",
+      "type": "ranking",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}, {"id": "moved", "token": "move", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": []}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "new", "other"], "arguments_present": false, "resource_selections": {}},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 2, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": "new", "current_writer": "zz", "text": ""},
+      "expected": {"choices": ["other", "moved"], "promotions": []}
+    },
+    {
+      "id": "replay-renamed-path-promotion",
+      "description": "A token rename preserves promotion evidence for an unchanged stable-ID path.",
+      "type": "ranking",
+      "tree": [
+        {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "retitle", "kind": "leaf"}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Tree", "Tree/refactor", "Tree/refactor/rename"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Tree", "Tree/refactor", "Tree/refactor/rename"], "arguments_present": false, "resource_selections": {}, "position": 2}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null, "current_writer": "zz", "text": ""},
+      "recording_tree": [
+        {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf"}
+      ],
+      "expected": {"choices": ["Tree", "Pulse"], "promotions": ["Tree/refactor/rename"]}
+    },
+    {
+      "id": "replay-moved-no-old-path-promotion",
+      "description": "A different node reusing the old spelling does not inherit a moved path promotion.",
+      "type": "ranking",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}, {"id": "moved", "token": "move", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "replacement", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf"}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf"}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 2, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:20:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null, "current_writer": "zz", "text": ""},
+      "expected": {"choices": ["root"], "promotions": []}
+    },
+    {
+      "id": "resource-rename-structural",
+      "description": "A resource rename does not change structural choices or competing promotions.",
+      "type": "ranking",
+      "tree": [
+        {"id": "Tree", "token": "Tree", "kind": "namespace", "children": [{"id": "Tree/docs", "token": "docs", "kind": "leaf"}, {"id": "Tree/refactor", "token": "refactor", "kind": "namespace", "children": [{"id": "Tree/refactor/extract", "token": "extract", "kind": "leaf"}, {"id": "Tree/refactor/rename", "token": "rename", "kind": "leaf"}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf"},
+        {"id": "note-root", "token": "Note", "kind": "namespace", "children": [{"id": "note-open", "token": "open", "kind": "namespace", "children": [{"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "candidates": [{"id": "alpha-id", "label": "Alpha"}, {"id": "beta-id", "label": "Beta"}], "required": true}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Tree", "Tree/docs"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Tree", "Tree/docs"], "arguments_present": false, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Tree", "Tree/docs"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-01-01T12:03:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["note-root", "note-open", "note-slot"], "arguments_present": true, "resource_selections": {"note-slot": "alpha-id"}, "position": 4},
+        {"kind": "commit", "time": "2030-01-01T12:04:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["note-root", "note-open", "note-slot"], "arguments_present": true, "resource_selections": {"note-slot": "alpha-id"}, "position": 5},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "shortcut", "writer": "a", "command_kind": "semantic", "recorded_path": ["note-root", "note-open", "note-slot"], "arguments_present": true, "resource_selections": {"note-slot": "alpha-id"}, "position": 6},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "shortcut", "writer": "a", "command_kind": "semantic", "recorded_path": ["note-root", "note-open", "note-slot"], "arguments_present": true, "resource_selections": {"note-slot": "alpha-id"}, "position": 7},
+        {"kind": "commit", "time": "2030-01-01T12:07:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "picker", "origin": "shortcut", "writer": "a", "command_kind": "semantic", "recorded_path": ["note-root", "note-open", "note-slot"], "arguments_present": true, "resource_selections": {"note-slot": "alpha-id"}, "position": 8},
+        {"kind": "resource_rename", "time": "2030-01-01T12:15:00Z", "context": {"project": "work", "resource": "lua"}, "writer": "a", "position": 99, "slot_id": "note-slot", "from": "unused", "to": "renamed"}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "parent": null, "current_writer": "zz", "text": ""},
+      "expected": {"choices": ["Tree", "note-root", "Pulse"], "promotions": ["Tree/docs", "note-slot"]}
+    },
+    {
+      "id": "flow-moved-node",
+      "description": "Flow replay resolves a stable moved node through its current capability.",
+      "type": "flows",
+      "tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf", "steps": [{"capability": "other.close"}]}, {"id": "moved", "token": "move", "kind": "leaf", "steps": [{"capability": "moved.open"}]}]}, {"id": "old", "token": "old", "kind": "namespace", "children": []}]}
+      ],
+      "recording_tree": [
+        {"id": "root", "token": "Tree", "kind": "namespace", "children": [{"id": "new", "token": "new", "kind": "namespace", "children": [{"id": "other", "token": "other", "kind": "leaf", "steps": [{"capability": "other.close"}]}]}, {"id": "old", "token": "old", "kind": "namespace", "children": [{"id": "moved", "token": "move", "kind": "leaf", "steps": [{"capability": "moved.open"}]}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 1, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 2, "command_kind": "semantic", "recorded_path": ["root", "new", "other"], "arguments_present": false, "resource_selections": {}},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 3, "command_kind": "semantic", "recorded_path": ["root", "old", "moved"], "arguments_present": false, "resource_selections": {}},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "position": 4, "command_kind": "semantic", "recorded_path": ["root", "new", "other"], "arguments_present": false, "resource_selections": {}}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "moved.open"}, {"capability": "other.close"}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"capability\":\"moved.open\"},{\"capability\":\"other.close\"}]]"}]}
+    },
+    {
+      "id": "flow-fold-expired",
+      "description": "Flow lookback uses the later occurrence of a repeated Lord Howe wall time, retaining the cutoff itself.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-04-06T14:50:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-04-06T14:51:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-04-06T14:55:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-04-06T14:56:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 4}
+      ],
+      "query": {"time": "2030-05-27T15:15:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": []},
+      "timezone": "Australia/Lord_Howe"
+    },
+    {
+      "id": "flow-fold-inclusive",
+      "description": "Flow lookback uses the later occurrence of a repeated Lord Howe wall time, retaining the cutoff itself.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-04-06T15:15:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-04-06T15:16:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-04-06T15:20:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-04-06T15:21:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 4}
+      ],
+      "query": {"time": "2030-05-27T15:15:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]},
+      "timezone": "Australia/Lord_Howe"
+    },
+    {
+      "id": "flow-native-break",
+      "description": "A native event breaks a flow sequence.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf", "steps": [{"capability": "task.pause"}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "native", "recorded_path": ["Pulse"], "arguments_present": false, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 4},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "native", "recorded_path": ["Pulse"], "arguments_present": false, "resource_selections": {}, "position": 5},
+        {"kind": "commit", "time": "2030-01-01T12:07:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 6}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": []}
+    },
+    {
+      "id": "flow-arguments-break",
+      "description": "A semantic event with arguments breaks a flow sequence.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf", "steps": [{"capability": "task.pause"}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": true, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 4},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": true, "resource_selections": {}, "position": 5},
+        {"kind": "commit", "time": "2030-01-01T12:07:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 6}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": []}
+    },
+    {
+      "id": "flow-arguments-break-current-writer",
+      "description": "Current-writer semantic events persist argument presence and break flow sequences.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf", "steps": [{"capability": "task.pause"}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": true, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 4},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": true, "resource_selections": {}, "position": 5},
+        {"kind": "commit", "time": "2030-01-01T12:07:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 6}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "a"},
+      "expected": {"proposals": []}
+    },
+    {
+      "id": "flow-no-arguments",
+      "description": "Clearing argument presence makes the same complete capability steps eligible for proposals.",
+      "type": "flows",
+      "tree": [
+        {"id": "Task", "token": "Task", "kind": "namespace", "children": [{"id": "Task/ax", "token": "ax", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "x"}}]}, {"id": "Task/ay", "token": "ay", "kind": "leaf", "steps": [{"capability": "task.open", "args": {"mode": "y"}}]}, {"id": "Task/b", "token": "b", "kind": "leaf", "steps": [{"capability": "task.close", "args": {"target": "current"}}]}]},
+        {"id": "Pulse", "token": "Pulse", "kind": "leaf", "steps": [{"capability": "task.pause"}]}
+      ],
+      "events": [
+        {"kind": "commit", "time": "2030-01-01T12:00:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 1},
+        {"kind": "commit", "time": "2030-01-01T12:01:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": false, "resource_selections": {}, "position": 2},
+        {"kind": "commit", "time": "2030-01-01T12:02:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 3},
+        {"kind": "commit", "time": "2030-01-01T12:05:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/ax"], "arguments_present": false, "resource_selections": {}, "position": 4},
+        {"kind": "commit", "time": "2030-01-01T12:06:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Pulse"], "arguments_present": false, "resource_selections": {}, "position": 5},
+        {"kind": "commit", "time": "2030-01-01T12:07:00Z", "context": {"project": "work", "resource": "lua"}, "surface": "dispatch", "origin": "direct", "writer": "a", "command_kind": "semantic", "recorded_path": ["Task", "Task/b"], "arguments_present": false, "resource_selections": {}, "position": 6}
+      ],
+      "query": {"time": "2030-01-01T12:30:00Z", "context": {"project": "work", "resource": "lua"}, "current_writer": "zz"},
+      "expected": {"proposals": [{"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.pause"}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 440, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"capability\":\"task.pause\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.pause"}, {"capability": "task.close", "args": {"target": "current"}}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"capability\":\"task.pause\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.pause"}], "support": 2, "score": 400, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"capability\":\"task.pause\"}]]"}]}
+    },
+    {
+      "id": "flow-id-final-tie",
+      "description": "Equal score, support and recency sort by IDs derived from the complete group key.",
+      "type": "flow_order",
+      "candidates": [{"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "recency": 7}, {"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "recency": 7}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "recency": 7}],
+      "expected": {"proposals": [{"project": "other", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "id": "[\"other\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "lua", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "id": "[\"work\",[\"file\",\"buffer\",\"lua\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}, {"project": "work", "resource": "python", "steps": [{"capability": "task.open", "args": {"mode": "x"}}, {"capability": "task.close", "args": {"target": "current"}}], "score": 400, "support": 2, "id": "[\"work\",[\"file\",\"buffer\",\"python\",\"*\",\"n\"],[{\"args\":{\"mode\":\"x\"},\"capability\":\"task.open\"},{\"args\":{\"target\":\"current\"},\"capability\":\"task.close\"}]]"}]}
+    },
+    {
+      "id": "navigate-mixed-enter",
+      "description": "Entering an ordinary value retains its transient ID and advances to the resource slot without dispatch.",
+      "type": "navigation",
+      "tree": [
+        {"id": "mix-root", "token": "Note", "kind": "namespace", "children": [{"id": "mix-open", "token": "open", "kind": "hybrid", "children": [{"id": "title-slot", "token": "$title", "kind": "slot", "slot_kind": "text", "required": true, "suggestions": [{"id": "typed-title", "value": "hello"}]}, {"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "Alpha"}]}]}]}
+      ],
+      "input": {"current": "title-slot", "action": "select", "choice": "typed-title", "selections": {}, "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": false, "selections": {}, "ordinary_values": {"title-slot": "typed-title"}, "missing": ["note-slot"], "event_resources": {}, "event": null}
+    },
+    {
+      "id": "navigate-mixed-missing",
+      "description": "Mixed ordinary and resource navigation preserves transient input without recording its value.",
+      "type": "navigation",
+      "tree": [
+        {"id": "mix-root", "token": "Note", "kind": "namespace", "children": [{"id": "mix-open", "token": "open", "kind": "hybrid", "children": [{"id": "title-slot", "token": "$title", "kind": "slot", "slot_kind": "text", "required": true, "suggestions": [{"id": "typed-title", "value": "hello"}]}, {"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "Alpha"}]}]}]}
+      ],
+      "input": {"current": "note-slot", "action": "commit", "selections": {"note-slot": "note-a"}, "ordinary_values": {}},
+      "expected": {"current": "note-slot", "committed": false, "selections": {"note-slot": "note-a"}, "ordinary_values": {}, "missing": ["title-slot"], "event_resources": {}, "event": null}
+    },
+    {
+      "id": "navigate-mixed-commit",
+      "description": "Mixed ordinary and resource navigation preserves transient input without recording its value.",
+      "type": "navigation",
+      "tree": [
+        {"id": "mix-root", "token": "Note", "kind": "namespace", "children": [{"id": "mix-open", "token": "open", "kind": "hybrid", "children": [{"id": "title-slot", "token": "$title", "kind": "slot", "slot_kind": "text", "required": true, "suggestions": [{"id": "typed-title", "value": "hello"}]}, {"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "Alpha"}]}]}]}
+      ],
+      "input": {"current": "note-slot", "action": "commit", "selections": {"note-slot": "note-a"}, "ordinary_values": {"title-slot": "typed-title"}},
+      "expected": {"current": "note-slot", "committed": true, "selections": {"note-slot": "note-a"}, "ordinary_values": {"title-slot": "typed-title"}, "missing": [], "event_resources": {"note-slot": "note-a"}, "event": {"command_kind": "semantic", "recorded_path": ["mix-root", "mix-open"], "arguments_present": true, "resource_selections": {"note-slot": "note-a"}}}
+    },
+    {
+      "id": "navigate-mixed-back",
+      "description": "Mixed ordinary and resource navigation preserves transient input without recording its value.",
+      "type": "navigation",
+      "tree": [
+        {"id": "mix-root", "token": "Note", "kind": "namespace", "children": [{"id": "mix-open", "token": "open", "kind": "hybrid", "children": [{"id": "title-slot", "token": "$title", "kind": "slot", "slot_kind": "text", "required": true, "suggestions": [{"id": "typed-title", "value": "hello"}]}, {"id": "note-slot", "token": "$note", "kind": "slot", "slot_kind": "resource", "required": true, "candidates": [{"id": "note-a", "label": "Alpha"}]}]}]}
+      ],
+      "input": {"current": "note-slot", "action": "back", "selections": {"note-slot": "note-a"}, "ordinary_values": {"title-slot": "typed-title"}},
+      "expected": {"current": "title-slot", "committed": false, "selections": {}, "ordinary_values": {"title-slot": "typed-title"}, "missing": ["note-slot"], "event_resources": {}, "event": null}
     }
   ]
 }

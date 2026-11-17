@@ -6,7 +6,7 @@
   "properties": {
     "binding": { "$ref": "#/$defs/binding" },
     "cases": { "type": "array", "minItems": 1, "items": { "oneOf": [
-      { "$ref": "#/$defs/ranking" }, { "$ref": "#/$defs/flows" },
+      { "$ref": "#/$defs/ranking" }, { "$ref": "#/$defs/flows" }, { "$ref": "#/$defs/flow_order" },
       { "$ref": "#/$defs/acceptance" }, { "$ref": "#/$defs/navigation" }
     ] } }
   },
@@ -118,18 +118,14 @@
         "parent": { "type": ["string", "null"] }, "current_writer": { "$ref": "#/$defs/id" },
         "text": { "type": "string" },
         "matches": { "type": "object", "additionalProperties": { "type": "boolean" } },
-        "groups": { "type": "array", "items": { "$ref": "#/$defs/query_group" } },
         "match_quality": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
-      }, "additionalProperties": false
-    },
-    "query_group": {
-      "type": "object", "required": ["name", "ranked", "items"],
-      "properties": { "name": { "$ref": "#/$defs/id" }, "ranked": { "type": "boolean" }, "items": { "$ref": "#/$defs/ids" } },
+      },
+      "allOf": [{ "if": { "properties": { "parent": { "type": "null" } } }, "then": { "not": { "required": ["matches"] } } }],
       "additionalProperties": false
     },
     "result_group": {
-      "type": "object", "required": ["name", "items"],
-      "properties": { "name": { "$ref": "#/$defs/id" }, "items": { "$ref": "#/$defs/ids" } },
+      "type": "object", "required": ["name", "ranked", "items"],
+      "properties": { "name": { "$ref": "#/$defs/id" }, "ranked": { "type": "boolean" }, "items": { "$ref": "#/$defs/ids" } },
       "additionalProperties": false
     },
     "flow_query": {
@@ -148,7 +144,7 @@
         "timezone": { "$ref": "#/$defs/id" },
         "expected": {
           "type": "object", "required": ["choices", "promotions"],
-          "properties": { "choices": { "$ref": "#/$defs/ids" }, "promotions": { "$ref": "#/$defs/ids" }, "groups": { "type": "array", "items": { "$ref": "#/$defs/result_group" } } },
+          "properties": { "choices": { "$ref": "#/$defs/ids" }, "promotions": { "$ref": "#/$defs/ids" }, "matches": { "type": "object", "additionalProperties": { "type": "boolean" } }, "groups": { "type": "array", "items": { "$ref": "#/$defs/result_group" } } },
           "additionalProperties": false
         }
       }, "additionalProperties": false
@@ -162,15 +158,30 @@
         "timezone": { "$ref": "#/$defs/id" },
         "expected": {
           "type": "object", "required": ["proposals"],
-          "properties": { "proposals": { "type": "array", "items": {
-            "type": "object", "required": ["project", "resource", "steps", "support", "score"],
-            "properties": {
-              "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" },
-              "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
-              "support": { "type": "integer", "minimum": 1 }, "score": { "type": "integer", "minimum": 0 }
-            }, "additionalProperties": false
-          } } }, "additionalProperties": false
+          "properties": { "proposals": { "type": "array", "items": { "$ref": "#/$defs/proposal" } } }, "additionalProperties": false
         }
+      }, "additionalProperties": false
+    },
+    "proposal": {
+      "type": "object", "required": ["id", "project", "resource", "steps", "support", "score"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+        "support": { "type": "integer", "minimum": 1 }, "score": { "type": "integer", "minimum": 0 }
+      }, "additionalProperties": false
+    },
+    "flow_order": {
+      "type": "object", "required": ["id", "description", "type", "candidates", "expected"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" }, "type": { "const": "flow_order" },
+        "candidates": { "type": "array", "items": {
+          "type": "object", "required": ["project", "resource", "steps", "support", "score", "recency"],
+          "properties": { "project": { "$ref": "#/$defs/id" }, "resource": { "$ref": "#/$defs/id" },
+            "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }, "support": { "type": "integer", "minimum": 1 },
+            "score": { "type": "integer", "minimum": 0 }, "recency": { "type": "integer", "minimum": 0 } },
+          "additionalProperties": false
+        } },
+        "expected": { "type": "object", "required": ["proposals"], "properties": { "proposals": { "type": "array", "items": { "$ref": "#/$defs/proposal" } } }, "additionalProperties": false }
       }, "additionalProperties": false
     },
     "acceptance": {
@@ -199,18 +210,19 @@
         "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
         "type": { "const": "navigation" }, "tree": { "$ref": "#/$defs/tree" },
         "input": {
-          "type": "object", "required": ["current", "action", "selections"],
+          "type": "object", "required": ["current", "action", "selections", "ordinary_values"],
           "properties": {
             "current": { "$ref": "#/$defs/id" }, "choice": { "$ref": "#/$defs/id" },
             "action": { "enum": ["accept", "advance", "commit", "select", "back"] },
-            "selections": { "$ref": "#/$defs/selections" }
+            "selections": { "$ref": "#/$defs/selections" }, "ordinary_values": { "$ref": "#/$defs/selections" }
           },
           "allOf": [{ "if": { "properties": { "action": { "enum": ["accept", "advance", "select"] } } }, "then": { "required": ["choice"] } }],
           "additionalProperties": false
         },
         "expected": {
-          "type": "object", "required": ["current", "committed", "selections", "missing", "event_resources"],
-          "properties": { "current": { "$ref": "#/$defs/id" }, "committed": { "type": "boolean" }, "selections": { "$ref": "#/$defs/selections" }, "missing": { "$ref": "#/$defs/ids" }, "event_resources": { "$ref": "#/$defs/selections" } },
+          "type": "object", "required": ["current", "committed", "selections", "ordinary_values", "missing", "event_resources"],
+          "properties": { "current": { "$ref": "#/$defs/id" }, "committed": { "type": "boolean" }, "selections": { "$ref": "#/$defs/selections" }, "ordinary_values": { "$ref": "#/$defs/selections" }, "missing": { "$ref": "#/$defs/ids" }, "event_resources": { "$ref": "#/$defs/selections" },
+            "event": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["command_kind", "recorded_path", "arguments_present", "resource_selections"], "properties": { "command_kind": { "const": "semantic" }, "recorded_path": { "$ref": "#/$defs/ids" }, "arguments_present": { "type": "boolean" }, "resource_selections": { "$ref": "#/$defs/selections" } }, "additionalProperties": false }] } },
           "additionalProperties": false
         }
       }, "additionalProperties": false

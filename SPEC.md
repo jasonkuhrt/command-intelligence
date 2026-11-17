@@ -5,14 +5,19 @@
 The terms **MUST**, **MUST NOT**, and **SHOULD** state requirements and
 recommendations; **MAY** denotes an option. An implementation MUST declare
 this specification version and document its host bindings as described in
-[BINDINGS.md](BINDINGS.md).
+[BINDINGS.md](BINDINGS.md). A conformance claim MUST pass every applicable
+[shared case](conformance/README.md) and the boundary checks in §11. String
+sort keys compare ascending lexicographic UTF-8 bytes unless a binding declares
+another deterministic total order.
 
 Given the same retained facts, current session, configuration, command
-inventory, context, and time, derived state and ordering MUST be deterministic.
-An implementation MAY cache derived state, but MUST rebuild it when those inputs
-change. In particular, an event crossing the horizon, a backward clock movement,
-a configuration change, or a log disappearing MUST be reflected in the next
-result. A backward clock movement rereads still-existing history when needed.
+inventory, candidate-index snapshot, query, match results, context, and time,
+derived state and ordering MUST be deterministic. An implementation MAY cache
+derived state, but MUST recompute affected results when any input changes. In
+particular, an event crossing the horizon, a backward clock movement, a
+configuration change, a log disappearing, or a changed query, index or match
+result MUST be reflected in the next result. A backward clock movement rereads
+still-existing history when needed.
 
 ## 2. Command model
 
@@ -56,20 +61,24 @@ host's parsing and validation rules.
 A goal signal is a fully specified invocation committed on an explicit user
 surface. The surface MUST capture the intended command, working context, project,
 commit time, and shortcut origin at commit, before execution. It MUST record the
-intent when the surface returns to input or on normal exit; an earlier pending
-commit is recorded before the next commit. Nested actions and ordinary
-programmatic execution MUST NOT create additional signals. Replaying an owned
-command records that command. Failure, unavailability after commitment, or a
+intent no later than when the host becomes ready for another user command or
+before normal termination, whichever comes first; recording at commit satisfies
+this deadline. An earlier pending intent MUST be recorded before the next commit
+even if readiness is not observable. The binding defines the host's lifecycle.
+Nested actions and ordinary programmatic execution MUST NOT create additional
+signals. Replaying an owned command records that command. Failure, unavailability after commitment, or a
 declined confirmation MUST NOT change a committed signal. An abandoned path or
 cancelled, incomplete slot has not committed an invocation.
 
 An intent event MUST contain facts only: a commit time, committing surface, an
 independent `origin` of `direct` or `shortcut`, project identifier, closed
-context identifiers, whether arguments were present, and a semantic node path
-or native command root. A resource-slot commit MUST also retain the selected
-resource ID declared by the index. A writer or session identifier MUST be
-recoverable for replay. The log MUST NOT contain ordinary argument or slot
-values, resource labels, free-form query text, command bodies, provider or
+context identifiers, whether arguments were present, and whether the command is
+semantic or native. A semantic event MUST retain the node-ID path as it was at
+commit; a native event MUST retain its command root. For each selected resource
+slot, the event MUST retain a mapping from that slot's ID to the resource ID
+declared by the index. Absent optional slots have no entry. A writer or session
+identifier MUST be recoverable for replay. The log MUST NOT contain ordinary
+argument or slot values, resource labels, free-form query text, command bodies, provider or
 capability IDs, execution outcomes, or latency. Writers MUST validate declared
 identifiers; readers MUST validate record shape without requiring the original
 provider to be installed.
@@ -103,13 +112,16 @@ the direct target. A configured per-root vector MAY replace these absolute
 credit values. A native command or free-form invocation without a declared path
 credits its root as the direct target. Credits are nonnegative integers.
 
-For each direct dispatch, every tree edge on the path, including implicit
-root-to-command, receives the direct credit, as does the full path. Node, edge,
-and path evidence is derived globally and for the event's exact and facet
+For each direct dispatch, every tree edge on its recorded path, including the
+implicit root-to-command edge, receives the direct credit, as does the full
+path. Node, edge, and path evidence is derived globally and for the event's exact and facet
 contexts. A shortcut dispatch records a shortcut use for freshness but adds no
 node, tree-edge, or path score credit. Execution counts and credit totals are
 distinct. Workflow sequences are derived from ordered events; they are not
-tree-edge credits.
+tree-edge credits. Replay MUST NOT reconstruct a recorded path from the current
+inventory: a removed or moved node retains its recorded ancestors and edges.
+A stable node's own credit remains associated with its ID after a move or token
+rename; only current choices are offered.
 
 Each committed resource selection gives the slot root's direct credit, 100 by
 default, to its `(slot ID, resource ID)` independently of the command path.
@@ -120,14 +132,14 @@ resources.
 
 ## 6. Time and session
 
-Replay MUST order events by time, then writer ID in lexicographic UTF-8 byte
-order, then position within that writer's log. Recency is the order of the
-relevant credited events in that replay, not timestamp alone. To calculate the
-**365-day** cutoff, take the same local wall time 365 calendar days earlier,
-using the timezone's offset on that date. If the target time falls in a clock
-gap, move it forward by the gap; if it is repeated, choose the later occurrence
-(standard time in a daylight-saving fall-back). An event at the cutoff remains;
-an older one MUST be ignored. Retained events may physically remain in a live
+Replay MUST order events by ascending time, then ascending writer ID, then
+ascending position within that writer's log. Recency is the order of relevant
+credited events in that replay, not timestamp alone. The cutoff for `N` local
+calendar days is the same local wall time `N` dates earlier, using the
+timezone's offset on that date. If the target time falls in a clock gap, move it
+forward by the gap; if it is repeated, choose the later occurrence. An event at
+the cutoff remains; an older one is excluded. Apply this operation with
+`N = 365` for the event horizon. Retained events may physically remain in a live
 writer's log until safe to remove, but MUST NOT influence derived results after
 the cutoff.
 
@@ -164,15 +176,16 @@ relaxed tree transition `R`, and node activation `N`, the default score is
 `8T + 3R + 2N`. `N` includes direct and propagated credit. The binding defines
 which choices match a query and the order of any matching groups. Within each
 ranked group, positive-score choices precede unscored choices. Order scored
-choices by descending score, then descending recency, then original structural
-position. Unscored choices keep their original order. Ranking MUST NOT be
-disabled for a large frontier. Recency breaks a tie; it is not an additive score.
+choices by descending score, then descending recency, then ascending original
+structural position. Unscored choices keep their original order. Ranking MUST NOT
+be disabled for a large frontier. Recency breaks a tie; it is not an additive score.
 
 For each current resource-slot candidate matching the query, compute `N` from
 its own credits as node activation above, scoped to its slot. The host supplies
 a nonnegative integer match quality `M` for the query, with larger values meaning
-a better match; its binding defines the scale. Rank candidates by `N + M`, then
-resource credit recency, then index order. Candidates without usage have `N = 0`.
+a better match; its binding defines the scale. Rank candidates by descending
+`N + M`, then descending resource credit recency, then ascending index position.
+Candidates without usage have `N = 0`.
 
 ## 8. Promotion
 
@@ -196,10 +209,10 @@ the exact and matching facet scores; its relaxed path score is the global path
 score. Mix each across projects and session as in section 7. Promotion score is
 `6 × context-specific path + 2 × relaxed path + mixed node activation`. Sort
 eligible promotions by descending score, then descending recency of retained
-direct path-credit events, then rendered path. Shortcut uses do not update this
-recency, even when they keep the path eligible. These limits and weights are
-configurable. Demotion follows the freshness gate and competition; it does not
-require negative credits.
+direct path-credit events, then ascending rendered path and ascending node ID.
+Shortcut uses do not update this recency, even when they keep the path eligible.
+These limits and weights are configurable. Demotion follows the freshness gate
+and competition; it does not require negative credits.
 
 ## 9. Flows
 
@@ -217,11 +230,14 @@ argument values from the event log. It MUST use consecutive eligible semantic
 events from one writer and project, by default in the same exact context, with
 at most 180 seconds between events. A native, incomplete, missing, or
 unresolvable capability breaks a sequence, as does an existing flow. It
-considers at most the latest 512 events within `max(window, freshness) + 30`
-calendar days, combines two to four steps, and requires support of two and a
-score of 180. Each occurrence adds `20 × step count + 40 × project weight`,
-with the section 7 durable project weights. It sorts by score, support, recency,
-then a deterministic host-defined flow ID, and returns at most six.
+considers at most the latest 512 events at or after the §6 cutoff for
+`max(window, freshness) + 30` calendar days, combines two to four steps, and
+requires support of two and a score of 180. Each occurrence adds
+`20 × step count + 40 × project weight`,
+with the section 7 durable project weights. It sorts by descending score,
+descending support, descending recency, then ascending deterministic host-defined
+flow ID, and returns at most six. The host MUST assign distinct IDs to distinct
+proposals in the same result.
 These proposal settings are configurable; the proposal lookback does not alter
 the 365-day event horizon. Workflow proposals do not affect live ranking until
 explicitly represented and invoked as commands.
@@ -255,7 +271,8 @@ An implementation MUST test capture through every claimed commit surface,
 including its surface, origin, context, and selected identity, and verify that
 nested actions do not duplicate it and abandoned input records none. It MUST
 test persistence and replay through its actual log, including resource IDs for
-any resource slot and the exclusion of ordinary slot values. Its replay checks
-MUST cover writer positions across log segments and backward clock movement.
-Where surfaces hand off, it MUST check preservation of the line and cursor.
+any resource slot and the exclusion of ordinary slot values. Every log's replay
+checks MUST cover logical writer order and backward clock movement. A segmented
+log MUST also check writer positions across segments. Where a handoff carries
+text, the implementation MUST check preservation of the line and cursor.
 Synthetic scoring cases do not establish these boundary guarantees.

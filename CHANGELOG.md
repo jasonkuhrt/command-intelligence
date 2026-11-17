@@ -10,3 +10,6 @@
   persist them separately.
 - Known cmdux gap: equal-time events in one writer's numbered segments can replay
   in filename order rather than writer position after a backward clock movement.
+- Known cmdux gap: at the repeated local time in the Lord Howe fixture, the
+  pinned implementation chooses the earlier cutoff instead of the required later
+  occurrence.

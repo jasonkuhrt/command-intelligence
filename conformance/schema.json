@@ -58,6 +58,12 @@
       "properties": { "id": { "$ref": "#/$defs/id" }, "label": { "type": "string" } },
       "additionalProperties": false
     },
+    "suggestion": {
+      "type": "object", "required": ["id", "value"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "value": { "type": "string" } },
+      "additionalProperties": false
+    },
+    "selections": { "type": "object", "propertyNames": { "$ref": "#/$defs/id" }, "additionalProperties": { "$ref": "#/$defs/id" } },
     "node": {
       "type": "object", "required": ["id", "token", "kind"],
       "properties": {
@@ -65,46 +71,66 @@
         "kind": { "enum": ["namespace", "leaf", "hybrid", "slot"] },
         "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
         "slot_kind": { "$ref": "#/$defs/id" },
+        "required": { "type": "boolean" },
         "values": { "$ref": "#/$defs/ids" },
+        "suggestions": { "type": "array", "items": { "$ref": "#/$defs/suggestion" } },
         "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
         "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind"] } },
+        { "if": { "properties": { "kind": { "const": "slot" } } }, "then": { "required": ["slot_kind", "required"] } },
         { "if": { "properties": { "kind": { "not": { "const": "slot" } } } },
-          "then": { "not": { "anyOf": [{ "required": ["slot_kind"] }, { "required": ["values"] }, { "required": ["candidates"] }] } } },
+          "then": { "not": { "anyOf": [{ "required": ["slot_kind"] }, { "required": ["required"] }, { "required": ["values"] }, { "required": ["suggestions"] }, { "required": ["candidates"] }] } } },
         { "if": { "required": ["slot_kind"], "properties": { "slot_kind": { "const": "resource" } } },
-          "then": { "required": ["candidates"], "properties": { "kind": { "const": "slot" } }, "not": { "required": ["values"] } } },
+          "then": { "required": ["candidates"], "properties": { "kind": { "const": "slot" } }, "not": { "anyOf": [{ "required": ["values"] }, { "required": ["suggestions"] }] } } },
         { "if": { "required": ["candidates"] },
           "then": { "required": ["slot_kind"], "properties": { "slot_kind": { "const": "resource" } } } }
       ], "additionalProperties": false
     },
     "tree": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" } },
     "event": {
-      "type": "object", "required": ["kind", "node", "time", "context", "writer", "position"],
+      "type": "object", "required": ["kind", "time", "context", "writer", "position"],
       "properties": {
-        "kind": { "enum": ["commit", "resource_rename"] }, "node": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["commit", "resource_rename"] },
         "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
         "writer": { "$ref": "#/$defs/id" }, "position": { "type": "integer", "minimum": 1 },
         "surface": { "$ref": "#/$defs/id" }, "origin": { "enum": ["direct", "shortcut"] },
-        "resource_id": { "$ref": "#/$defs/id" },
+        "command_kind": { "enum": ["semantic", "native"] },
+        "recorded_path": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "arguments_present": { "type": "boolean" }, "resource_selections": { "$ref": "#/$defs/selections" },
+        "slot_id": { "$ref": "#/$defs/id" },
         "from": { "$ref": "#/$defs/id" }, "to": { "$ref": "#/$defs/id" }
       },
       "allOf": [
         { "if": { "properties": { "kind": { "const": "commit" } } },
-          "then": { "required": ["surface", "origin"], "not": { "anyOf": [{ "required": ["from"] }, { "required": ["to"] }] } } },
+          "then": { "required": ["surface", "origin", "command_kind", "recorded_path", "arguments_present", "resource_selections"], "not": { "anyOf": [{ "required": ["from"] }, { "required": ["to"] }, { "required": ["slot_id"] }] } } },
         { "if": { "properties": { "kind": { "const": "resource_rename" } } },
-          "then": { "required": ["from", "to"], "not": { "anyOf": [{ "required": ["surface"] }, { "required": ["origin"] }, { "required": ["resource_id"] }] } } }
+          "then": { "required": ["slot_id", "from", "to"], "not": { "anyOf": [{ "required": ["surface"] }, { "required": ["origin"] }, { "required": ["command_kind"] }, { "required": ["arguments_present"] }, { "required": ["recorded_path"] }, { "required": ["resource_selections"] }] } } },
+        { "if": { "required": ["command_kind"], "properties": { "command_kind": { "const": "native" } } },
+          "then": { "properties": { "recorded_path": { "maxItems": 1 }, "resource_selections": { "maxProperties": 0 } } } }
       ], "additionalProperties": false
     },
     "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
     "query": {
-      "type": "object", "required": ["time", "context", "parent", "current_writer"],
+      "type": "object", "required": ["time", "context", "parent", "current_writer", "text"],
       "properties": {
         "time": { "$ref": "#/$defs/timestamp" }, "context": { "$ref": "#/$defs/context" },
         "parent": { "type": ["string", "null"] }, "current_writer": { "$ref": "#/$defs/id" },
+        "text": { "type": "string" },
+        "matches": { "type": "object", "additionalProperties": { "type": "boolean" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/query_group" } },
         "match_quality": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
       }, "additionalProperties": false
+    },
+    "query_group": {
+      "type": "object", "required": ["name", "ranked", "items"],
+      "properties": { "name": { "$ref": "#/$defs/id" }, "ranked": { "type": "boolean" }, "items": { "$ref": "#/$defs/ids" } },
+      "additionalProperties": false
+    },
+    "result_group": {
+      "type": "object", "required": ["name", "items"],
+      "properties": { "name": { "$ref": "#/$defs/id" }, "items": { "$ref": "#/$defs/ids" } },
+      "additionalProperties": false
     },
     "flow_query": {
       "type": "object", "required": ["time", "context", "current_writer"],
@@ -117,12 +143,12 @@
       "type": "object", "required": ["id", "description", "type", "tree", "events", "query", "expected"],
       "properties": {
         "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
-        "type": { "const": "ranking" }, "tree": { "$ref": "#/$defs/tree" },
+        "type": { "const": "ranking" }, "tree": { "$ref": "#/$defs/tree" }, "recording_tree": { "$ref": "#/$defs/tree" },
         "events": { "$ref": "#/$defs/events" }, "query": { "$ref": "#/$defs/query" },
         "timezone": { "$ref": "#/$defs/id" },
         "expected": {
           "type": "object", "required": ["choices", "promotions"],
-          "properties": { "choices": { "$ref": "#/$defs/ids" }, "promotions": { "$ref": "#/$defs/ids" } },
+          "properties": { "choices": { "$ref": "#/$defs/ids" }, "promotions": { "$ref": "#/$defs/ids" }, "groups": { "type": "array", "items": { "$ref": "#/$defs/result_group" } } },
           "additionalProperties": false
         }
       }, "additionalProperties": false
@@ -131,7 +157,7 @@
       "type": "object", "required": ["id", "description", "type", "tree", "events", "query", "expected"],
       "properties": {
         "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
-        "type": { "const": "flows" }, "tree": { "$ref": "#/$defs/tree" },
+        "type": { "const": "flows" }, "tree": { "$ref": "#/$defs/tree" }, "recording_tree": { "$ref": "#/$defs/tree" },
         "events": { "$ref": "#/$defs/events" }, "query": { "$ref": "#/$defs/flow_query" },
         "timezone": { "$ref": "#/$defs/id" },
         "expected": {
@@ -173,15 +199,18 @@
         "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" },
         "type": { "const": "navigation" }, "tree": { "$ref": "#/$defs/tree" },
         "input": {
-          "type": "object", "required": ["current", "choice", "action"],
+          "type": "object", "required": ["current", "action", "selections"],
           "properties": {
             "current": { "$ref": "#/$defs/id" }, "choice": { "$ref": "#/$defs/id" },
-            "action": { "enum": ["accept", "advance", "commit"] }
-          }, "additionalProperties": false
+            "action": { "enum": ["accept", "advance", "commit", "select", "back"] },
+            "selections": { "$ref": "#/$defs/selections" }
+          },
+          "allOf": [{ "if": { "properties": { "action": { "enum": ["accept", "advance", "select"] } } }, "then": { "required": ["choice"] } }],
+          "additionalProperties": false
         },
         "expected": {
-          "type": "object", "required": ["current", "committed"],
-          "properties": { "current": { "$ref": "#/$defs/id" }, "committed": { "type": "boolean" } },
+          "type": "object", "required": ["current", "committed", "selections", "missing", "event_resources"],
+          "properties": { "current": { "$ref": "#/$defs/id" }, "committed": { "type": "boolean" }, "selections": { "$ref": "#/$defs/selections" }, "missing": { "$ref": "#/$defs/ids" }, "event_resources": { "$ref": "#/$defs/selections" } },
           "additionalProperties": false
         }
       }, "additionalProperties": false

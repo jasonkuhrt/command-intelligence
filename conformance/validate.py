@@ -2,7 +2,6 @@
 """Validate both portable suites and the invariants JSON Schema cannot express."""
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
@@ -43,9 +42,18 @@ def validate_core(document):
     by_id = {node["id"]: node for node in nodes}
     if len(by_id) != len(nodes):
         fail("core binding: duplicate node IDs")
+    capabilities = {item["id"]: item for item in binding["capabilities"]}
+    if len(capabilities) != len(binding["capabilities"]):
+        fail("core binding: duplicate capability IDs")
     for node in nodes:
         if node["parent"] is not None and node["parent"] not in by_id:
             fail(f"core binding: unknown parent for {node['id']}")
+        if "valid_values" in node and node["kind"] != "ordinary_slot":
+            fail(f"core binding: {node['id']} is not an ordinary slot")
+        if "capability" in node:
+            capability = capabilities.get(node["capability"])
+            if not capability or node.get("safety") != capability["safety"]:
+                fail(f"core binding: invalid capability or safety for {node['id']}")
         for step in node.get("steps", []):
             if step not in by_id:
                 fail(f"core binding: unknown flow step {step}")
@@ -55,38 +63,96 @@ def validate_core(document):
         if len({candidate['id'] for candidate in candidates}) != len(candidates):
             fail(f"core binding: duplicate resources in {slot}")
 
-    def event(case_id, item):
+    def event(case_id, item, required):
         path = item["recorded_path"]
         if not path or any(node not in by_id for node in path):
             fail(f"{case_id}: empty or unknown recorded path")
+        if item.get("surface") and item["surface"] + "_surface" not in required:
+            fail(f"{case_id}: recorded event needs its surface capability")
+        if item["resource_selections"] and "resource_slots" not in required:
+            fail(f"{case_id}: resource history needs resource_slots")
+        feature_paths(case_id, path, required)
         for slot, identity in item["resource_selections"].items():
             ids = {candidate['id'] for candidate in binding['resources'].get(slot, [])}
             if slot not in path or identity not in ids:
                 fail(f"{case_id}: invalid resource selection {slot}={identity}")
 
+    def feature_paths(case_id, path, required):
+        for node_id in path:
+            node = by_id.get(node_id)
+            if not node:
+                fail(f"{case_id}: unknown node {node_id}")
+            if node["kind"] == "resource_slot" and "resource_slots" not in required:
+                fail(f"{case_id}: resource slot needs resource_slots")
+            if node["kind"] == "flow" and "flows" not in required:
+                fail(f"{case_id}: flow needs flows")
+
     for case in document["cases"]:
         case_id, required = case["id"], set(case["requires"])
+        for surface in ("text", "structured"):
+            if f"typed_resource_{surface}" in required and not {f"{surface}_surface", "resource_slots"} <= required:
+                fail(f"{case_id}: typed_resource_{surface} needs its surface and resource_slots")
         if case["type"] == "interaction":
             for action in case["actions"]:
                 op = action["op"]
+                if "path" in action:
+                    feature_paths(case_id, action["path"], required)
+                if op == "choose" and action["via"] == "promotion" and any(
+                    by_id[node]["kind"] == "native" for node in action["path"]
+                ) and "native_promotions" not in required:
+                    fail(f"{case_id}: native promotion needs native_promotions")
                 if op == "commit" and action["surface"] + "_surface" not in required:
                     fail(f"{case_id}: missing surface capability")
-                if op == "type_resource" and not {"text_surface", "resource_slots"} <= required:
-                    fail(f"{case_id}: typed resources need text_surface and resource_slots")
-                if op == "pick_resource" and "resource_slots" not in required:
-                    fail(f"{case_id}: resource selection needs resource_slots")
+                if op in ("advance", "back") and "structured_surface" not in required:
+                    fail(f"{case_id}: navigation needs structured_surface")
+                if op in ("pick_resource", "type_resource"):
+                    feature_paths(case_id, [action["slot"]], required)
+                    if by_id[action["slot"]]["kind"] != "resource_slot":
+                        fail(f"{case_id}: selected slot is not a resource slot")
+                if op == "type_resource":
+                    surface = action["surface"]
+                    if f"typed_resource_{surface}" not in required:
+                        fail(f"{case_id}: typed resource needs typed_resource_{surface}")
+                    if not any(a["op"] == "commit" and a["surface"] == surface for a in case["actions"]):
+                        fail(f"{case_id}: typed resource has no commit on its surface")
+                if op == "pick_resource":
+                    ids = {item["id"] for item in binding["resources"][action["slot"]]}
+                    if action["id"] not in ids:
+                        fail(f"{case_id}: selected resource is not in the fixture index")
+                if op == "ordinary_value" and by_id.get(action["slot"], {}).get("kind") != "ordinary_slot":
+                    fail(f"{case_id}: ordinary value needs an ordinary slot")
             for item in case["expected"]["events"]:
-                event(case_id, item)
+                event(case_id, item, required)
+            for item in case["expected"].get("navigation", []):
+                feature_paths(case_id, [item["current"], *item["choices"]], required)
+            if len(case["expected"].get("navigation", [])) != sum(
+                action["op"] in ("advance", "back") for action in case["actions"]
+            ):
+                fail(f"{case_id}: each navigation operation needs an observation")
+            for item in case["expected"].get("resolutions", []):
+                feature_paths(case_id, [item["target"]], required)
+            if len(case["expected"].get("resolutions", [])) != sum(
+                action["op"] == "resolve" for action in case["actions"]
+            ):
+                fail(f"{case_id}: each resolve operation needs an observation")
+            for item in case["expected"].get("capabilities", []):
+                if item != capabilities.get(item["id"]):
+                    fail(f"{case_id}: unknown instrumented capability")
             for text in case["expected"].get("forbidden_text", []):
                 if text in json.dumps(case["expected"]["events"], ensure_ascii=False):
                     fail(f"{case_id}: forbidden input appears in expected events")
         elif case["type"] == "consistency":
             for item in case["input"]["history"]:
-                event(case_id, item)
+                event(case_id, item, required)
             actual, expected = case["input"]["candidates"], case["expected"]["candidates"]
+            feature_paths(case_id, actual, required)
+            if case["input"]["mode"] == "surfaces" and not {"text_surface", "structured_surface"} <= required:
+                fail(f"{case_id}: surface consistency needs both surface capabilities")
             if len(actual) != len(set(actual)) or set(actual) != set(expected):
                 fail(f"{case_id}: inconsistent candidate sets")
         elif case["type"] == "edit":
+            if "text_surface" not in required:
+                fail(f"{case_id}: text edit needs text_surface")
             for value in (case["input"], case["expected"]):
                 data, cursor = value["line"].encode(), value["cursor"]
                 if cursor > len(data):
@@ -95,10 +161,6 @@ def validate_core(document):
                     data[:cursor].decode()
                 except UnicodeDecodeError:
                     fail(f"{case_id}: cursor splits a UTF-8 character")
-        elif case["type"] == "cutoff":
-            parse = lambda value: datetime.fromisoformat(value.replace("Z", "+00:00"))
-            if parse(case["input"]["earlier"]) >= parse(case["input"]["now"]):
-                fail(f"{case_id}: earlier time must precede now")
 
 
 def main():

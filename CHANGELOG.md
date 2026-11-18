@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.0
+
+- Restore the single 365-day core horizon, require per-resource learning and
+  binding-specific behavioral witnesses, and strengthen the portable cases and
+  host boundary checks for navigation, execution, replay, and cache inputs.
+- New cmdux gaps checked at `ac2b52d`: the structured picker cannot advance a
+  hybrid without dispatch; path-derived node IDs change on a move or token
+  rename, so history does not follow the same node; flow safety is checked as
+  a group before execution and is not rechecked for each step. A safe test
+  capability changed the next step to destructive during a flow and that step
+  ran without the configured destructive confirmation.
+- cmdux has no indexed resource slots. Native core witnesses and boundary
+  checks remain to be supplied and run before a conformance claim.
+
 ## 0.1.0
 
 - Define the normative semantic command model, committed intent, privacy,

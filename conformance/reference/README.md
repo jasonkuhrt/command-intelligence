@@ -8,8 +8,8 @@ the applicable cases for that part and compares each ordered result to
 `expected`. Resource cases apply when resource slots are supported, acceptance
 cases when text is supported, navigation cases when structured navigation is
 supported, and flow cases when flow proposals are supported. The core suite
-independently tests typed resources on any text surface with resource slots;
-it does not require structured navigation. Host boundary checks are also
+independently tests typed resources on each surface that supports typed resource
+input; text cases do not require structured navigation. Host boundary checks are also
 required: synthetic cases cannot prove capture, persistence, or privacy.
 
 ## Synthetic binding

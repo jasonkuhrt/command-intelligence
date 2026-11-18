@@ -12,7 +12,7 @@ command model.
 - [Conformance](conformance/README.md): portable cases and runner contract.
 - [Versioning](VERSIONING.md) and [changelog](CHANGELOG.md).
 
-The current specification is **0.1.0**. An implementation declares the version
+The current specification is **0.2.0**. An implementation declares the version
 it conforms to. The reference algorithm and its fixtures are based on cmdux;
 passing their adapter is not a native cmdux conformance claim. The Obsidian
 command palette is planned.

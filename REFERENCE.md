@@ -1,20 +1,21 @@
-# Reference algorithm 0.1.0
+# Reference algorithm 0.2.0
 
 This algorithm is **informative**. An implementation can conform to [SPEC.md](SPEC.md)
-without using these weights, windows, eligibility rules, or tie-breakers. A
+without using these weights, ranking windows, eligibility rules, or tie-breakers. A
 binding states which parts it follows. The [reference cases](conformance/reference/README.md)
 exercise this algorithm with a synthetic binding. They do not replace core
 cases or implementation-owned boundary checks.
 
 The reference was extracted from cmdux `842338bcd4dca02d66b9a6fc03e1f7792edfa3d9`.
 The documented projections and gaps mean that passing its adapter does not
-establish native cmdux conformance. Defaults below are configurable.
+establish native cmdux conformance. Defaults below are configurable except for
+the 365-day horizon required by the core.
 
 ## Facts and time
 
 For equal timestamps, replay orders ascending writer ID in UTF-8 byte order,
 then ascending logical writer position. Recency is the order of credited events
-in that replay. The reference horizon is 365 local calendar days. Its cutoff
+in that replay. The horizon is 365 local calendar days. Its cutoff
 for `N` days is the same local wall time `N` dates earlier. A clock gap moves
 forward by its size; a repeated time uses the later occurrence. The cutoff is
 inclusive. The same operation applies to flow lookback.

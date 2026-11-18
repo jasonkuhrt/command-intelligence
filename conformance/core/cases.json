@@ -28,7 +28,8 @@
         "id": "Note/delete",
         "kind": "action",
         "parent": "Note",
-        "safety": "destructive"
+        "safety": "destructive",
+        "capability": "delete"
       },
       {
         "id": "Note/move",
@@ -94,6 +95,72 @@
         "kind": "action",
         "parent": null,
         "safety": "safe"
+      },
+      {
+        "id": "Note/archive",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/manage",
+        "kind": "hybrid",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/manage/inspect",
+        "kind": "action",
+        "parent": "Note/manage",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/rename",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/rename/$tag",
+        "kind": "ordinary_slot",
+        "parent": "Note/rename",
+        "required": false
+      },
+      {
+        "id": "Note/rename/$name",
+        "kind": "ordinary_slot",
+        "parent": "Note/rename",
+        "required": true,
+        "valid_values": [
+          "Valid name"
+        ]
+      },
+      {
+        "id": "Note/compare",
+        "kind": "action",
+        "parent": "Note",
+        "safety": "safe"
+      },
+      {
+        "id": "Note/compare/$source",
+        "kind": "resource_slot",
+        "parent": "Note/compare",
+        "required": true
+      },
+      {
+        "id": "Note/compare/$destination",
+        "kind": "resource_slot",
+        "parent": "Note/compare",
+        "required": true
+      },
+      {
+        "id": "SharedFlow",
+        "kind": "flow",
+        "parent": null,
+        "safety": "destructive",
+        "steps": [
+          "Note/delete"
+        ]
       }
     ],
     "resources": {
@@ -132,6 +199,42 @@
           "id": "two-shared",
           "label": "Shared"
         }
+      ],
+      "Note/compare/$source": [
+        {
+          "id": "alpha-id",
+          "label": "Alpha note"
+        },
+        {
+          "id": "beta-id",
+          "label": "Beta"
+        },
+        {
+          "id": "one-shared",
+          "label": "Shared"
+        },
+        {
+          "id": "two-shared",
+          "label": "Shared"
+        }
+      ],
+      "Note/compare/$destination": [
+        {
+          "id": "alpha-id",
+          "label": "Alpha note"
+        },
+        {
+          "id": "beta-id",
+          "label": "Beta"
+        },
+        {
+          "id": "one-shared",
+          "label": "Shared"
+        },
+        {
+          "id": "two-shared",
+          "label": "Shared"
+        }
       ]
     },
     "tokenizer": {
@@ -141,7 +244,15 @@
       ],
       "escape": "\\",
       "offset_unit": "utf8-byte"
-    }
+    },
+    "capabilities": [
+      {
+        "id": "delete",
+        "implementation": "delete-handler",
+        "policy": "confirm-delete",
+        "safety": "destructive"
+      }
+    ]
   },
   "cases": [
     {
@@ -484,7 +595,8 @@
       "type": "interaction",
       "requires": [
         "text_surface",
-        "resource_slots"
+        "resource_slots",
+        "typed_resource_text"
       ],
       "actions": [
         {
@@ -498,7 +610,8 @@
         {
           "op": "type_resource",
           "slot": "Note/open/$note",
-          "text": "Alpha note"
+          "text": "Alpha note",
+          "surface": "text"
         },
         {
           "op": "commit",
@@ -536,7 +649,8 @@
       "type": "interaction",
       "requires": [
         "text_surface",
-        "resource_slots"
+        "resource_slots",
+        "typed_resource_text"
       ],
       "actions": [
         {
@@ -550,7 +664,8 @@
         {
           "op": "type_resource",
           "slot": "Note/open/$note",
-          "text": "Alpha note"
+          "text": "Alpha note",
+          "surface": "text"
         },
         {
           "op": "commit",
@@ -588,7 +703,8 @@
       "type": "interaction",
       "requires": [
         "text_surface",
-        "resource_slots"
+        "resource_slots",
+        "typed_resource_text"
       ],
       "actions": [
         {
@@ -602,7 +718,8 @@
         {
           "op": "type_resource",
           "slot": "Note/open/$note",
-          "text": "Absent"
+          "text": "Absent",
+          "surface": "text"
         },
         {
           "op": "commit",
@@ -627,7 +744,8 @@
       "type": "interaction",
       "requires": [
         "text_surface",
-        "resource_slots"
+        "resource_slots",
+        "typed_resource_text"
       ],
       "actions": [
         {
@@ -641,7 +759,8 @@
         {
           "op": "type_resource",
           "slot": "Note/open/$note",
-          "text": "Shared"
+          "text": "Shared",
+          "surface": "text"
         },
         {
           "op": "commit",
@@ -725,7 +844,8 @@
       "type": "interaction",
       "requires": [
         "text_surface",
-        "resource_slots"
+        "resource_slots",
+        "typed_resource_text"
       ],
       "actions": [
         {
@@ -744,7 +864,8 @@
         {
           "op": "type_resource",
           "slot": "Note/move/$note",
-          "text": "Alpha note"
+          "text": "Alpha note",
+          "surface": "text"
         },
         {
           "op": "commit",
@@ -1442,12 +1563,11 @@
     },
     {
       "id": "horizon-boundary",
-      "description": "The declared horizon includes its cutoff and retained history reappears when the clock moves backward.",
+      "description": "The 365-day cutoff includes its boundary and retained history returns after a backward clock move.",
       "type": "cutoff",
       "requires": [],
       "input": {
-        "now": "2031-04-06T15:15:00Z",
-        "earlier": "2031-04-04T15:15:00Z"
+        "now": "2031-04-06T15:15:00Z"
       },
       "expected": {
         "at_cutoff_eligible": true,
@@ -1467,11 +1587,10 @@
         "mode": "surfaces",
         "candidates": [
           "Note/edit",
-          "Note/open"
+          "Note/archive"
         ],
         "history": [
           {
-            "surface": "structured",
             "origin": "direct",
             "command_kind": "semantic",
             "recorded_path": [
@@ -1482,18 +1601,14 @@
             "resource_selections": {}
           },
           {
-            "surface": "structured",
             "origin": "direct",
             "command_kind": "semantic",
             "recorded_path": [
               "Note",
-              "Note/open",
-              "Note/open/$note"
+              "Note/archive"
             ],
-            "arguments_present": true,
-            "resource_selections": {
-              "Note/open/$note": "alpha-id"
-            }
+            "arguments_present": false,
+            "resource_selections": {}
           }
         ]
       },
@@ -1501,7 +1616,7 @@
         "same_order": true,
         "candidates": [
           "Note/edit",
-          "Note/open"
+          "Note/archive"
         ]
       }
     },
@@ -1514,11 +1629,10 @@
         "mode": "replay",
         "candidates": [
           "Note/edit",
-          "Note/open"
+          "Note/archive"
         ],
         "history": [
           {
-            "surface": "structured",
             "origin": "direct",
             "command_kind": "semantic",
             "recorded_path": [
@@ -1528,6 +1642,57 @@
             "arguments_present": false,
             "resource_selections": {}
           },
+          {
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/archive"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ]
+      },
+      "expected": {
+        "same_order": true,
+        "candidates": [
+          "Note/edit",
+          "Note/archive"
+        ]
+      }
+    },
+    {
+      "id": "structured-typed-resource",
+      "description": "A structured surface resolves an unambiguous label to its ID.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots",
+        "typed_resource_structured"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Alpha note",
+          "surface": "structured"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
           {
             "surface": "structured",
             "origin": "direct",
@@ -1542,13 +1707,706 @@
               "Note/open/$note": "alpha-id"
             }
           }
-        ]
-      },
-      "expected": {
-        "same_order": true,
-        "candidates": [
-          "Note/edit",
+        ],
+        "executions": [
           "Note/open"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
+      "id": "structured-typed-unresolved",
+      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots",
+        "typed_resource_structured"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Absent",
+          "surface": "structured"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Absent"
+        ]
+      }
+    },
+    {
+      "id": "structured-typed-ambiguous",
+      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots",
+        "typed_resource_structured"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Shared",
+          "surface": "structured"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Shared"
+        ]
+      }
+    },
+    {
+      "id": "hybrid-advance",
+      "description": "Advancing a hybrid shows its child without dispatch.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/manage"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "advance"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "navigation": [
+          {
+            "current": "Note/manage",
+            "choices": [
+              "Note/manage/inspect"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hybrid-dispatch",
+      "description": "Dispatching the hybrid is a distinct explicit choice.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/manage"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/manage"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/manage"
+        ]
+      }
+    },
+    {
+      "id": "hybrid-backtrack",
+      "description": "Backtracking returns to the hybrid frontier without dispatch.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/manage"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "advance"
+        },
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/manage",
+            "Note/manage/inspect"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "back"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "navigation": [
+          {
+            "current": "Note/manage",
+            "choices": [
+              "Note/manage/inspect"
+            ]
+          },
+          {
+            "current": "Note/manage",
+            "choices": [
+              "Note/manage/inspect"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary-optional-skip",
+      "description": "An empty optional ordinary slot can be skipped to complete a later required slot.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/rename",
+            "Note/rename/$tag"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "advance"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/rename/$name",
+          "text": "Valid name"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/rename",
+              "Note/rename/$name"
+            ],
+            "arguments_present": true,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/rename"
+        ],
+        "navigation": [
+          {
+            "current": "Note/rename/$name",
+            "choices": []
+          }
+        ],
+        "forbidden_text": [
+          "Valid name"
+        ]
+      }
+    },
+    {
+      "id": "ordinary-invalid",
+      "description": "An invalid ordinary slot value cannot commit or dispatch.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/rename",
+            "Note/rename/$name"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/rename/$name",
+          "text": "Invalid name"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Invalid name"
+        ]
+      }
+    },
+    {
+      "id": "resolve-unavailable",
+      "description": "Resolve the same grammar while the action is already available and unavailable.",
+      "type": "interaction",
+      "requires": [],
+      "actions": [
+        {
+          "op": "resolve",
+          "tokens": [
+            "Note",
+            "edit"
+          ],
+          "available": true
+        },
+        {
+          "op": "resolve",
+          "tokens": [
+            "Note",
+            "edit"
+          ],
+          "available": false
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "resolutions": [
+          {
+            "target": "Note/edit",
+            "owner": "fixture",
+            "unconsumed": []
+          },
+          {
+            "target": "Note/edit",
+            "owner": "fixture",
+            "unconsumed": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "unconsumed-input",
+      "description": "Unconsumed trailing input does not dispatch or record a goal.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "trailing": "unexpected"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "unexpected"
+        ]
+      }
+    },
+    {
+      "id": "two-resource-selections",
+      "description": "An invocation retains both resource IDs under their distinct slot IDs.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/compare"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/compare/$source",
+          "id": "alpha-id"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/compare/$destination",
+          "id": "beta-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/compare",
+              "Note/compare/$source",
+              "Note/compare/$destination"
+            ],
+            "arguments_present": true,
+            "resource_selections": {
+              "Note/compare/$source": "alpha-id",
+              "Note/compare/$destination": "beta-id"
+            }
+          }
+        ],
+        "executions": [
+          "Note/compare"
+        ],
+        "forbidden_text": [
+          "Alpha note",
+          "Beta"
+        ]
+      }
+    },
+    {
+      "id": "capability-direct-promotion-text",
+      "description": "Direct and promoted dispatch use the same instrumented implementation and safety policy.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "confirmation": "accept"
+        },
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "confirmation": "accept"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          },
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/delete",
+          "Note/delete"
+        ],
+        "capabilities": [
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          },
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          }
+        ]
+      }
+    },
+    {
+      "id": "capability-flow-text",
+      "description": "A flow step uses the same instrumented capability and safety policy.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "SharedFlow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "confirmation": "accept"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "SharedFlow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/delete"
+        ],
+        "capabilities": [
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          }
+        ]
+      }
+    },
+    {
+      "id": "capability-direct-promotion-structured",
+      "description": "Direct and promoted dispatch use the same instrumented implementation and safety policy.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "confirmation": "accept"
+        },
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/delete"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "confirmation": "accept"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          },
+          {
+            "surface": "structured",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/delete"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/delete",
+          "Note/delete"
+        ],
+        "capabilities": [
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          },
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          }
+        ]
+      }
+    },
+    {
+      "id": "capability-flow-structured",
+      "description": "A flow step uses the same instrumented capability and safety policy.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "flows"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "SharedFlow"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "confirmation": "accept"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "SharedFlow"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [
+          "Note/delete"
+        ],
+        "capabilities": [
+          {
+            "id": "delete",
+            "implementation": "delete-handler",
+            "policy": "confirm-delete",
+            "safety": "destructive"
+          }
         ]
       }
     }

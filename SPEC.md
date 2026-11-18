@@ -1,4 +1,4 @@
-# Command Intelligence Specification 0.1.0
+# Command Intelligence Specification 0.2.0
 
 ## 1. Conformance and bindings
 
@@ -25,6 +25,9 @@ by its slot ID and resource ID, not by the label or search text. The binding
 specifies index refresh, matching, and identity through rename. A rename MAY
 retain the ID or use a fact mapping the old ID to the new one; mappings MUST
 be unambiguous and acyclic. A rename is not an invocation.
+Each resource candidate's ranking MUST use its own usage history under its
+slot, and that history MUST survive its declared rename. The binding defines
+how history combines with matching, context, and decay.
 
 At commit, a filled resource slot MUST resolve to exactly one declared ID,
 whether the value was typed or selected. The binding specifies whether an
@@ -99,9 +102,11 @@ events from one writer MUST replay in recorded writer order, including across
 log segments; the binding defines a deterministic tie-break across writers.
 Only current choices are offered.
 
-A binding MUST declare one event horizon and one calendar-cutoff operation,
-including timezone and gap/fold handling. The same operation is used wherever a
-cutoff is needed. An event at the horizon cutoff remains eligible; an older
+A host MUST use one event horizon of 365 local calendar days and one
+calendar-cutoff operation. The operation finds the same local wall time the
+given number of calendar days earlier; the binding defines the timezone and
+gap/fold handling. The same operation is used wherever a cutoff is needed.
+An event at the horizon cutoff remains eligible; an older
 event MUST NOT influence derived state, even if its physical record remains.
 A backward clock movement MUST make still-existing eligible history visible.
 
@@ -111,6 +116,13 @@ promotions. The host identifies the working context behind a surface, not the
 surface itself. All surfaces presenting the same frontier, query, context,
 retained facts, configuration, session, and time MUST use the same underlying
 ranking. The binding declares any surface-specific matching or presentation.
+Each binding MUST provide reproducible witnesses showing history, context, and
+decay changing an observable ranking or promotion result. It MUST also provide
+a witness that produces a promotion from recorded history, without injecting the
+promotion. A resource-slot binding MUST show contrasting candidate histories
+changing their relative order under equal matching conditions, and show rename
+continuity. Witnesses specify the host's own outcomes, not common scores or
+thresholds.
 
 ## 5. Resolution and execution
 
@@ -148,22 +160,60 @@ choice.
 
 ## 7. Implementation boundary checks
 
-An implementation MUST test capture on each claimed commit surface, including
-surface, origin, context, command kind, argument presence, resource IDs, and the
-exclusion of ordinary values. Tests MUST cover an incomplete promotion through
-slot completion, leaving its prefix, nested execution, and abandoned input.
-Text surfaces supporting resource slots MUST test typed, unresolved, and
-ambiguous resource commits, whether or not a structured surface exists.
+An implementation MUST run the applicable core cases and the following checks
+against its actual boundaries. A check for an unsupported feature does not apply.
 
-It MUST test persistence and replay through its actual log, horizon and
-backward-clock behavior, and deterministic results from the same inputs. It
-MUST check changes to query, index, and match results on consecutive requests;
-where a cache exists, the test MUST prime it first. It MUST verify the declared
-context, decay, promotion, and cross-surface ranking behavior. If log segments
-are used, their replay and writer order MUST be tested. Handoffs carrying text
-MUST be checked for line and cursor preservation.
+- Capture on each claimed commit surface: surface, origin, context, command kind,
+  argument presence, resource IDs, and exclusion of ordinary values.
+- An incomplete promotion through slot completion and leaving its prefix.
+- Nested execution and abandoned input add no goal signal.
+- Typed resource resolution, including resolved, unresolved, and ambiguous input,
+  on each text or structured surface that supports typed resource input.
+- Two resource selections in one event, each retained under its own slot ID.
+- Resource history survives each declared kind of rename.
+- A rename adds no invocation or invocation credit.
+- Ambiguous and cyclic rename mappings are rejected or safely skipped without
+  conflating resources or disturbing unrelated valid history.
+- The binding's contrasting-history witness.
+- The binding's context witness.
+- The binding's decay witness.
+- The binding's promotion witness, produced from real recorded history.
+- The binding's per-resource history and rename-continuity witnesses, if supported.
+- Resolution with availability already on and off yields the same command.
+- Unconsumed input cannot dispatch.
+- Learning cannot change grammar or ownership.
+- Invalid ordinary slot values cannot dispatch.
+- An action unavailable after commit does not run, direct or promoted.
+- Declined destructive confirmation stops execution, direct or promoted.
+- One instrumented capability's implementation and safety policy through direct,
+  promoted, and, when supported, flow execution.
+- Each flow step checks current availability and safety, obtains any required
+  confirmation, and stops the flow on failure, unavailability, or decline.
+- Persistence and replay through the actual log.
+- The 365-day horizon and backward-clock behavior.
+- Deterministic replay and results for the same inputs.
+- A deferred capture recorded by the first of readiness for another command or
+  normal termination, and before a subsequent commit; inspect at that deadline.
+- Reset with a pending capture, ensuring the old capture cannot reappear and a
+  subsequent commit can be recorded.
+- Malformed records are skipped.
+- Valid records are read without the original provider installed.
+- Storage failures are reported.
+- A moved stable node retains its history and its recorded historical edges.
+- Equal-time events retain their writer order, including across log segments.
+- Consecutive requests after a change to retained facts.
+- Consecutive requests after a change to configuration.
+- Consecutive requests after a change to the current session.
+- Consecutive requests after a change to the command inventory.
+- Consecutive requests after a change to time.
+- Consecutive requests after a change to working context.
+- Consecutive requests after a change to the query.
+- Consecutive requests after a change to the resource index, where supported.
+- Consecutive requests after a change to match results.
+- The same underlying ranking across surfaces.
+- Line and cursor preservation across text handoffs.
 
-It MUST test unavailable actions and declined destructive confirmations after
-commit through both direct and promoted paths. If flows are supported, it MUST
-also check availability, confirmation, and stopping on failure for flow steps.
-Synthetic cases do not replace these implementation-owned checks.
+For each consecutive-request check, compare with a fresh result for the changed
+input. Choose an observable change when the binding says it affects results;
+otherwise check the declared invariant. Prime the cache first if one exists.
+Synthetic cases do not replace these checks.

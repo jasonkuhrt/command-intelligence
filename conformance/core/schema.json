@@ -5,12 +5,13 @@
   "required": ["binding", "cases"],
   "properties": {
     "binding": {
-      "type": "object", "required": ["time", "project", "context", "writer", "nodes", "resources", "tokenizer"],
+      "type": "object", "required": ["time", "project", "context", "writer", "nodes", "resources", "capabilities", "tokenizer"],
       "properties": {
         "time": { "type": "string", "format": "date-time" }, "project": { "$ref": "#/$defs/id" },
         "context": { "type": "object", "additionalProperties": { "type": "string" } }, "writer": { "$ref": "#/$defs/id" },
         "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
         "resources": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/resource" } } },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
         "tokenizer": { "type": "object", "required": ["separators", "escape", "offset_unit"], "properties": {
           "separators": { "type": "array", "items": { "type": "string" } }, "escape": { "type": "string" },
           "offset_unit": { "const": "utf8-byte" }
@@ -25,11 +26,15 @@
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
-    "requires": { "type": "array", "uniqueItems": true, "items": { "enum": ["text_surface", "structured_surface", "resource_slots", "native_promotions", "flows"] } },
+    "requires": { "type": "array", "uniqueItems": true, "items": { "enum": ["text_surface", "structured_surface", "resource_slots", "typed_resource_text", "typed_resource_structured", "native_promotions", "flows"] } },
     "node": { "type": "object", "required": ["id", "kind", "parent"], "properties": {
-      "id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["namespace", "action", "ordinary_slot", "resource_slot", "native", "flow"] },
+      "id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["namespace", "action", "hybrid", "ordinary_slot", "resource_slot", "native", "flow"] },
       "parent": { "type": ["string", "null"] }, "required": { "type": "boolean" }, "safety": { "enum": ["safe", "destructive"] },
-      "steps": { "$ref": "#/$defs/ids" }
+      "steps": { "$ref": "#/$defs/ids" }, "valid_values": { "$ref": "#/$defs/ids" }, "capability": { "$ref": "#/$defs/id" }
+    }, "additionalProperties": false },
+    "capability": { "type": "object", "required": ["id", "implementation", "policy", "safety"], "properties": {
+      "id": { "$ref": "#/$defs/id" }, "implementation": { "$ref": "#/$defs/id" }, "policy": { "$ref": "#/$defs/id" },
+      "safety": { "enum": ["safe", "destructive"] }
     }, "additionalProperties": false },
     "resource": { "type": "object", "required": ["id", "label"], "properties": {
       "id": { "$ref": "#/$defs/id" }, "label": { "type": "string" }
@@ -40,13 +45,21 @@
       "command_kind": { "enum": ["semantic", "native"] }, "recorded_path": { "$ref": "#/$defs/ids" },
       "arguments_present": { "type": "boolean" }, "resource_selections": { "$ref": "#/$defs/selections" }
     }, "additionalProperties": false },
+    "history_event": { "type": "object", "required": ["origin", "command_kind", "recorded_path", "arguments_present", "resource_selections"], "properties": {
+      "surface": { "enum": ["text", "structured"] }, "origin": { "enum": ["direct", "shortcut"] }, "command_kind": { "enum": ["semantic", "native"] },
+      "recorded_path": { "$ref": "#/$defs/ids" }, "arguments_present": { "type": "boolean" },
+      "resource_selections": { "$ref": "#/$defs/selections" }
+    }, "additionalProperties": false },
     "action": { "oneOf": [
       { "type": "object", "required": ["op", "path", "via"], "properties": { "op": { "const": "choose" }, "path": { "$ref": "#/$defs/ids" }, "via": { "enum": ["direct", "promotion"] } }, "additionalProperties": false },
       { "type": "object", "required": ["op", "path"], "properties": { "op": { "enum": ["change_path", "internal"] }, "path": { "$ref": "#/$defs/ids" } }, "additionalProperties": false },
       { "type": "object", "required": ["op", "slot", "id"], "properties": { "op": { "const": "pick_resource" }, "slot": { "$ref": "#/$defs/id" }, "id": { "$ref": "#/$defs/id" } }, "additionalProperties": false },
-      { "type": "object", "required": ["op", "slot", "text"], "properties": { "op": { "enum": ["type_resource", "ordinary_value"] }, "slot": { "$ref": "#/$defs/id" }, "text": { "type": "string" } }, "additionalProperties": false },
+      { "type": "object", "required": ["op", "slot", "text", "surface"], "properties": { "op": { "const": "type_resource" }, "slot": { "$ref": "#/$defs/id" }, "text": { "type": "string" }, "surface": { "enum": ["text", "structured"] } }, "additionalProperties": false },
+      { "type": "object", "required": ["op", "slot", "text"], "properties": { "op": { "const": "ordinary_value" }, "slot": { "$ref": "#/$defs/id" }, "text": { "type": "string" } }, "additionalProperties": false },
+      { "type": "object", "required": ["op", "tokens", "available"], "properties": { "op": { "const": "resolve" }, "tokens": { "$ref": "#/$defs/ids" }, "available": { "type": "boolean" } }, "additionalProperties": false },
+      { "type": "object", "required": ["op"], "properties": { "op": { "enum": ["advance", "back"] } }, "additionalProperties": false },
       { "type": "object", "required": ["op", "text"], "properties": { "op": { "const": "native_arguments" }, "text": { "type": "string" } }, "additionalProperties": false },
-      { "type": "object", "required": ["op", "surface"], "properties": { "op": { "const": "commit" }, "surface": { "enum": ["text", "structured"] }, "available": { "type": "boolean" }, "confirmation": { "enum": ["accept", "decline"] }, "unavailable_step": { "$ref": "#/$defs/id" }, "declined_step": { "$ref": "#/$defs/id" }, "failed_step": { "$ref": "#/$defs/id" } }, "additionalProperties": false },
+      { "type": "object", "required": ["op", "surface"], "properties": { "op": { "const": "commit" }, "surface": { "enum": ["text", "structured"] }, "available": { "type": "boolean" }, "confirmation": { "enum": ["accept", "decline"] }, "trailing": { "type": "string" }, "unavailable_step": { "$ref": "#/$defs/id" }, "declined_step": { "$ref": "#/$defs/id" }, "failed_step": { "$ref": "#/$defs/id" } }, "additionalProperties": false },
       { "type": "object", "required": ["op"], "properties": { "op": { "const": "cancel" } }, "additionalProperties": false }
     ] },
     "interaction": { "type": "object", "required": ["id", "description", "type", "requires", "actions", "expected"], "properties": {
@@ -54,7 +67,10 @@
       "requires": { "$ref": "#/$defs/requires" }, "actions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/action" } },
       "expected": { "type": "object", "required": ["events", "executions"], "properties": {
         "events": { "type": "array", "items": { "$ref": "#/$defs/event" } }, "executions": { "$ref": "#/$defs/ids" },
-        "status": { "type": "array", "items": { "enum": ["open", "refused", "closed"] } }, "forbidden_text": { "type": "array", "items": { "type": "string" } }
+        "status": { "type": "array", "items": { "enum": ["open", "refused", "closed"] } }, "forbidden_text": { "type": "array", "items": { "type": "string" } },
+        "navigation": { "type": "array", "items": { "type": "object", "required": ["current", "choices"], "properties": { "current": { "$ref": "#/$defs/id" }, "choices": { "$ref": "#/$defs/ids" } }, "additionalProperties": false } },
+        "resolutions": { "type": "array", "items": { "type": "object", "required": ["target", "owner", "unconsumed"], "properties": { "target": { "$ref": "#/$defs/id" }, "owner": { "$ref": "#/$defs/id" }, "unconsumed": { "$ref": "#/$defs/ids" } }, "additionalProperties": false } },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } }
       }, "additionalProperties": false }
     }, "additionalProperties": false },
     "edit": { "type": "object", "required": ["id", "description", "type", "requires", "input", "expected"], "properties": {
@@ -64,12 +80,12 @@
     }, "additionalProperties": false },
     "cutoff": { "type": "object", "required": ["id", "description", "type", "requires", "input", "expected"], "properties": {
       "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" }, "type": { "const": "cutoff" }, "requires": { "$ref": "#/$defs/requires" },
-      "input": { "type": "object", "required": ["now", "earlier"], "properties": { "now": { "type": "string", "format": "date-time" }, "earlier": { "type": "string", "format": "date-time" } }, "additionalProperties": false },
+      "input": { "type": "object", "required": ["now"], "properties": { "now": { "type": "string", "format": "date-time" } }, "additionalProperties": false },
       "expected": { "type": "object", "required": ["at_cutoff_eligible", "before_cutoff_eligible", "earlier_eligible"], "properties": { "at_cutoff_eligible": { "const": true }, "before_cutoff_eligible": { "const": false }, "earlier_eligible": { "const": true } }, "additionalProperties": false }
     }, "additionalProperties": false },
     "consistency": { "type": "object", "required": ["id", "description", "type", "requires", "input", "expected"], "properties": {
       "id": { "$ref": "#/$defs/id" }, "description": { "$ref": "#/$defs/id" }, "type": { "const": "consistency" }, "requires": { "$ref": "#/$defs/requires" },
-      "input": { "type": "object", "required": ["mode", "candidates", "history"], "properties": { "mode": { "enum": ["surfaces", "replay"] }, "candidates": { "$ref": "#/$defs/ids" }, "history": { "type": "array", "items": { "$ref": "#/$defs/event" } } }, "additionalProperties": false },
+      "input": { "type": "object", "required": ["mode", "candidates", "history"], "properties": { "mode": { "enum": ["surfaces", "replay"] }, "candidates": { "$ref": "#/$defs/ids" }, "history": { "type": "array", "items": { "$ref": "#/$defs/history_event" } } }, "additionalProperties": false },
       "expected": { "type": "object", "required": ["same_order", "candidates"], "properties": { "same_order": { "const": true }, "candidates": { "$ref": "#/$defs/ids" } }, "additionalProperties": false }
     }, "additionalProperties": false }
   }

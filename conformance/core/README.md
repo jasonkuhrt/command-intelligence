@@ -59,10 +59,11 @@ remains empty and the later value is bound to its own slot.
 
 `pick_resource` selects an index ID. `remove_resource` updates the index while
 the interaction is pending. Attempt commit even if the host clears the stale
-selection during refresh.
-`type_resource` enters decoded text on its specified surface for resolution at
-commit. `ordinary_value` supplies an ordinary slot value. `native_arguments`
-supplies native argument text.
+input during refresh.
+`type_resource` enters decoded text on its specified surface. Its `matches`
+describe the index at entry. Resolve the text against the index at commit,
+including any intervening removal. `ordinary_value` supplies an ordinary
+slot value. `native_arguments` supplies native argument text.
 `cancel` abandons the interaction. `internal` executes a path programmatically,
 without creating a separate user commit.
 
@@ -127,51 +128,139 @@ facts with the fixture's time, context and writer. A history event with a
 `surface` uses that surface and requires its capability. Otherwise use any one
 claimed commit surface supported by the host; hold that choice fixed across
 the two requests. Obtain the complete underlying ranking of `candidates` twice
-with identical inputs. For `surfaces`, query both surface types under the
-[§4 equality condition](../../SPEC.md#4-derived-state-time-and-ranking): hold
-the frontier and every derivation input equal, including the inventory, index
-snapshot, and complete match results. For `replay`, rebuild from the same
-retained history between queries. The ordered lists must match and contain
-exactly the declared candidates in any shared order.
+with identical inputs. For `surfaces`, use a text and a structured surface
+under the [§4 equality condition](../../SPEC.md#4-derived-state-time-and-ranking).
+For `replay`, rebuild from the same retained history between queries. The
+ordered lists must match and contain exactly the declared candidates.
 
 ## Host boundary checks
 
 Run and report each applicable [§7 check](../../SPEC.md#7-implementation-boundary-checks)
-through the binding's normal surfaces, execution, storage, and ranking. In
-addition to the portable cases, use these setups where applicable.
+through the binding's normal surfaces, execution, storage, and ranking.
+Inspect actual events and count handler starts at those boundaries.
 
-- On each claimed commit surface, make the handler change a captured context
-  identifier, for example by opening a note of a different context kind.
-  Verify the change occurred and inspect the stored pre-execution context,
-  project and time at the §3 recording deadline. Commit an unowned native
-  command on every surface that accepts native commands. Exercise absence
-  and presence of arguments where supported, without depending on promotions.
-- Make a standalone committed handler start and fail. Count exactly one
-  persisted intent by the deadline. Check direct invalid ordinary input
-  separately: one intent with its filled slot ID and zero handler starts.
-- Run one instrumented capability directly, through a promotion, and, when
-  supported, as a step of a flow the binding can execute. Observe the actual
-  implementation and safety checks for that capability in each run. Use a
-  supported sequence for the stopping probes. When it can have multiple steps,
-  let the first succeed, then supply an invalid slot value to the second.
-  Verify the second handler never starts and any later steps remain unrun.
-  Check the same stop boundary for unavailability and declined confirmation,
-  and for failure after a step starts. Change a later step's availability or
-  safety from the first step to distinguish current checks from preflight.
-- Hold host state fixed when changing only learned history for the
-  availability, grammar, and ownership check. Compare underlying rankings
-  and promotions before and after uncommitted navigation, and separately
-  after adding diagnostic friction where supported. Keep all derivation
-  inputs fixed for each comparison.
-- Send a well-formed record with an undeclared ID to the production writer
-  and inspect storage for its absence. For selective reset, record both
-  in-scope and out-of-scope history before reset. Verify both from storage
-  after reset and after rebuilding derived state.
-- For changed inputs, prime any cache first and compare the next result with a
-  fresh result. Keep recorded history for the removed commands or resources.
-  Verify a command removed from inventory, a promotion whose path was
-  removed, and a resource removed from the index are each absent from the
-  relevant next result.
-- Use the reproducible [binding witnesses](../../BINDINGS.md), including decay
-  while the compared facts stay eligible at both observations and a promotion
-  obtained from captured history.
+### Capture and commitment
+
+- **Commit timing.** On each claimed commit surface, start at one time, change
+  the controlled clock after opening the interaction and before submitting,
+  then advance it again during execution and before any deferred write. Change
+  a captured working-context identifier at both transitions and change the
+  active project at each transition the host supports.
+  For a surface with an immediate gesture, set the commit values before the
+  gesture and change them inside the handler. Verify the transitions occurred
+  and that the stored values match the gesture. At the §3 deadline, also check
+  command, surface, origin, kind, argument presence, any applicable resource
+  IDs, and exclusion of ordinary values. For deferred writers, exercise
+  readiness, normal termination and a subsequent commit as recording deadlines.
+- **Native and replay capture.** Commit an unowned native command directly on
+  every surface accepting native commands, with and without arguments where
+  supported. Check root, argument presence, and surface. If the host offers
+  recall, replay an owned command from each accepting surface. Require exactly
+  one new intent for the underlying command with the surface used for replay.
+- **Incomplete input.** Attempt an explicit submit with a required ordinary
+  slot empty and check for zero intents and handler starts. Fill the slot with
+  a valid value and repeat through the same path. Require one intent and one
+  handler start. Exercise a promotion both through slot completion and through
+  leaving its prefix. Verify shortcut origin only on completion through the
+  promotion. Abandoned input and nested execution add no intent.
+
+### Resource identity
+
+- **Index at commit.** On each surface accepting typed resources, check unique,
+  missing, and ambiguous matches. Type a label while it matches exactly one
+  candidate, then remove that match or add a second before submission.
+  Require zero intents and handler starts. Also attempt commit after removing a
+  picked ID and require the same counts. Commit two resource selections in one
+  event and check each mapping under its own slot ID.
+- **Usage by slot.** Put the same two resources in two slots with equal matching
+  conditions, using a test provider if needed. Seed opposing histories in
+  the two slots, then swap the histories assigned to the slots while keeping
+  each resource's total usage and other derivation inputs fixed. At a fixed
+  slot frontier, require the candidates' relative order to change.
+- **Rename and reuse.** Exercise each declared rename kind. Record usage for a
+  resource, rename it, and create a different resource at the old label or path
+  while the old intent and any mapping are retained. Check the replacement ID
+  differs from the original resource's IDs before and after rename. Rebuild
+  from retained facts and verify the renamed resource keeps its usage, the new
+  one starts without it, and a new invocation credits only the replacement. The
+  rename itself adds neither an invocation nor credit. For hosts that use
+  mappings, also reject or safely skip ambiguous and cyclic mappings without
+  conflating resources or disturbing unrelated valid history.
+
+### Resolution and execution
+
+- **Independent resolution.** Resolve the same command with availability on
+  and off. Change only learned history and verify grammar, ownership and
+  availability stay fixed. Verify unconsumed input cannot dispatch.
+- **Refusal after a complete submit.** Submit an already-unavailable action
+  on each surface that permits explicit submission in that state. Supply a
+  valid ordinary slot value where supported. Also make the action unavailable
+  between commit and execution, and separately decline destructive
+  confirmation, on direct and promoted paths. Submit an invalid ordinary
+  value directly and by completing a promoted path. Each refusal retains
+  exactly one intent with the correct path, surface and origin, and never
+  starts the handler or stores the value.
+  Separately, make a committed standalone handler start and fail. Require
+  exactly one intent by the deadline.
+- **Shared capability and flow stops.** Observe the same instrumented
+  capability's actual implementation and safety policy directly, through a
+  promotion, and as a step of a supported flow. Probe unavailability and
+  destructive confirmation in separate runs. For a flow with multiple steps,
+  have the first step succeed and make the next step unavailable in one run
+  and destructive in the other, where the binding supports each transition.
+  Where a property is fixed or the flow has a single step, use a step with
+  that property set. Decline the destructive step's confirmation. Require
+  zero starts for the blocked step and any subsequent steps. Also exercise
+  invalid step input and failure after a step starts, using a second step
+  after a successful first where supported. Invalid input prevents its
+  handler from starting, and both cases prevent subsequent steps from running.
+
+### Storage and replay
+
+- **Replay order.** Rebuild from the actual log and compare results for equal
+  inputs. Move a stable node and check its history and recorded ancestor edges.
+  Check equal-time events within one writer across log segments if the host
+  uses them. For multiple writers, replay equal-time records from two writers
+  twice with storage enumeration reversed. Compare the observed replay order
+  to the binding's declared tie-break in each run.
+- **Time.** Exercise the calendar cutoff and backward clock operation with
+  retained records through the actual log, crossing a UTC offset change if the
+  binding's timezone permits one. Follow the independent cutoff calculation
+  used by the portable case.
+- **Writer, reader, and reset.** Send a well-formed record with an undeclared ID
+  to the production writer and inspect storage for its absence. Check that
+  readers skip malformed records and read valid records without the original
+  provider. Verify storage failures are reported. Reset with a pending capture,
+  then make a new commit and verify only the new one appears. For selective
+  reset, seed in-scope and out-of-scope records. Verify the former are removed
+  and the latter preserved in storage and after rebuilding derived state.
+
+### Ranking and cache freshness
+
+- **Witnesses and invariance.** Use the reproducible [binding witnesses](../../BINDINGS.md).
+  Keep the compared facts eligible at both decay observations and obtain a
+  promotion from real recorded history. Hold derivation inputs fixed when
+  comparing ranking and promotions before and after navigation, and separately
+  before and after adding diagnostic friction.
+- **Cross-surface ranking.** For each group of claimed ranking surfaces that
+  can issue an equivalent request, compare the complete underlying order on
+  every surface, including surfaces of the same kind. Hold all §4 inputs equal,
+  including active project, frontier, inventory, index snapshot and complete
+  match results.
+- **Changed inputs.** For each applicable §4 input, prime any cache and compare
+  the next result after changing that input with a fresh result. Choose an
+  observable transition where the binding says the input affects results.
+  Otherwise check the declared invariant. Where active project affects ranking,
+  switch only project, holding working context and other inputs fixed. Keep
+  recorded history for removed inventory or index entries and require the
+  removed commands, affected promotion paths, and removed resources to be
+  absent from the next result.
+
+### Text input
+
+- **Live suggestions and handoffs.** On each claimed text boundary, type a query
+  that makes a live choice available. Where learned promotions are supported,
+  seed history and verify a promotion is offered. Check the entire line after
+  the suggestion appears and before accepting it, then verify the edit follows
+  §6 on acceptance. Check line and cursor preservation on text and structured
+  handoffs from text.

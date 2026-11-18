@@ -1,4 +1,4 @@
-# Reference algorithm 0.3.0
+# Reference algorithm 0.4.0
 
 This algorithm is **informative**. An implementation can conform to [SPEC.md](SPEC.md)
 without using these weights, ranking windows, eligibility rules, or tie-breakers. A

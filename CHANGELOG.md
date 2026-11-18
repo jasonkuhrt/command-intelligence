@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0
+
+- Keep resource IDs reserved while retained intent or rename mappings refer to
+  them. Treat active project as a separate derivation input.
+- Add portable cases for typed resources whose match disappears before commit
+  and invalid ordinary values on promoted paths. Extend host checks for capture
+  timing, empty required slots, execution refusals, separate flow transitions,
+  replay attribution and ordering, per-slot resource history and rename reuse,
+  equivalent requests across surfaces, and live suggestions.
+- New cmdux gaps reproduced at `fea859b`. Completing a promoted `Buffer goto`
+  with an invalid value through Ex drops the intent. Submitting a picker
+  promotion for `Lsp refactor rename` after LSP becomes unavailable records it
+  as direct.
+  `Recall last` through Ex records the underlying command but replaces the
+  committing surface with `recall`.
+- The existing flow gap persists at the same pin. A first step that makes a
+  later step unavailable blocks it. A first step that makes a later step
+  destructive leaves it able to run without confirmation.
+
 ## 0.3.0
 
 - Define semantic commit eligibility separately from execution validation.

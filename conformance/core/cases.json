@@ -653,6 +653,55 @@
       }
     },
     {
+      "id": "stale-typed-resource-text",
+      "description": "A label with one match when typed no longer resolves after that match is removed before commit.",
+      "type": "interaction",
+      "requires": [
+        "text_surface",
+        "resource_slots",
+        "typed_resource_text"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Alpha note",
+          "surface": "text",
+          "matches": [
+            "alpha-id"
+          ]
+        },
+        {
+          "op": "remove_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
       "id": "typed-promotion-origin",
       "description": "Text completion of a promoted resource path preserves shortcut origin.",
       "type": "interaction",
@@ -1510,6 +1559,55 @@
       }
     },
     {
+      "id": "stale-typed-resource-structured",
+      "description": "A label with one match when typed no longer resolves after that match is removed before commit.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots",
+        "typed_resource_structured"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "type_resource",
+          "slot": "Note/open/$note",
+          "text": "Alpha note",
+          "surface": "structured",
+          "matches": [
+            "alpha-id"
+          ]
+        },
+        {
+          "op": "remove_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
       "id": "structured-typed-unresolved",
       "description": "A typed label with no candidate does not commit or persist.",
       "type": "interaction",
@@ -1811,6 +1909,102 @@
           {
             "surface": "structured",
             "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/rename",
+              "Note/rename/$name"
+            ],
+            "arguments_present": true,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [],
+        "forbidden_text": [
+          "Invalid name"
+        ]
+      }
+    },
+    {
+      "id": "promoted-ordinary-invalid-text",
+      "description": "Completing a promoted path with an invalid ordinary value records shortcut intent and never reaches the handler.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/rename",
+            "Note/rename/$name"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/rename/$name",
+          "text": "Invalid name"
+        },
+        {
+          "op": "commit",
+          "surface": "text"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "text",
+            "origin": "shortcut",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/rename",
+              "Note/rename/$name"
+            ],
+            "arguments_present": true,
+            "resource_selections": {}
+          }
+        ],
+        "executions": [],
+        "forbidden_text": [
+          "Invalid name"
+        ]
+      }
+    },
+    {
+      "id": "promoted-ordinary-invalid-structured",
+      "description": "Completing a promoted path with an invalid ordinary value records shortcut intent and never reaches the handler.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/rename",
+            "Note/rename/$name"
+          ],
+          "via": "promotion"
+        },
+        {
+          "op": "ordinary_value",
+          "slot": "Note/rename/$name",
+          "text": "Invalid name"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "shortcut",
             "command_kind": "semantic",
             "recorded_path": [
               "Note",

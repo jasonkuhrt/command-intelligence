@@ -1,4 +1,4 @@
-# Command Intelligence Specification 0.3.0
+# Command Intelligence Specification 0.4.0
 
 ## 1. Conformance and bindings
 
@@ -23,8 +23,12 @@ A resource slot draws candidates from a host index. Each candidate has a
 stable, declared resource ID and a current label. Usage identifies a resource
 by its slot ID and resource ID, not by the label or search text. The binding
 specifies index refresh, matching, and identity through rename. A rename MAY
-retain the ID or use a fact mapping the old ID to the new one; mappings MUST
-be unambiguous and acyclic. A rename is not an invocation.
+retain the ID or use a fact mapping the old ID to the new one. Mappings MUST
+be unambiguous and acyclic. A rename is not an invocation. A binding MUST NOT
+reassign a resource ID to a different resource under the same slot while
+retained intent refers to that ID or a retained rename mapping uses it as
+either endpoint. A new resource at a vacated label or path needs a distinct
+ID while those facts remain.
 Each resource candidate's ranking MUST use its own usage history under its
 slot, and that history MUST survive its declared rename. The binding defines
 how history combines with matching, context, and decay.
@@ -47,9 +51,10 @@ A goal signal is an invocation committed by an explicit user gesture. At that
 gesture, a semantic invocation commits if its grammar resolves the whole input
 to an action, its required slots are filled, and each filled resource slot
 resolves per §2.
-Ordinary slot value validation gates execution under §5. A supplied ordinary
-value that fails this validation still leaves one committed intent. Native
-invocations use the host's commit gesture and native grammar.
+Availability and ordinary slot value validation gate execution under §5.
+A complete invocation still commits when unavailable or when a supplied
+ordinary value fails validation. Native invocations use the host's commit
+gesture and native grammar.
 
 The surface MUST capture the intended command, context, project, time, and
 origin at commit, before execution. It MUST record that intent no later than
@@ -69,9 +74,10 @@ rule applies to them. Showing, previewing, or selecting an incomplete path is
 not itself a committed invocation.
 
 Nested actions and ordinary programmatic execution MUST NOT create additional
-goal signals. Replaying an owned command records that command. Failure,
-unavailability after commitment, or a declined confirmation MUST NOT alter a
-committed signal. Abandoned or incomplete input has not committed.
+goal signals. A user replaying an owned command records the underlying command
+and the surface that received the replay gesture. Failure, unavailability, or
+a declined confirmation MUST NOT alter a committed signal. Abandoned or
+incomplete input has not committed.
 
 An intent event MUST retain facts only: commit time, committing surface,
 independent origin, project, closed context identifiers, command kind (semantic
@@ -102,13 +108,15 @@ fixed, navigation and diagnostic friction MUST NOT affect ranking or promotions.
 ## 4. Derived state, time, and ranking
 
 Derived state MUST be a deterministic function of retained intent and rename
-facts, configuration, time, current session, inventory, resource index snapshot,
-requested frontier, query, match results, and working context. Cached results
-MUST reflect a change to any input on the next result. Replay uses the ID path
-recorded at commit. A node keeps its own history across a move or token rename,
-and its historical paths stay associated with their recorded ancestors. Equal-time
-events from one writer MUST replay in recorded writer order, including across
-log segments; the binding defines a deterministic tie-break across writers.
+facts, configuration, time, current session, active project, working context,
+inventory, resource index snapshot, requested frontier, query, and complete
+match results. The binding defines any effect of active project on ranking.
+Cached results MUST reflect a change to any input on the next result. Replay
+uses the ID path recorded at commit. A node keeps its own history across a move
+or token rename. Its historical paths stay associated with their recorded
+ancestors. Equal-time events from one writer MUST replay in recorded writer
+order, including across log segments. The binding defines a deterministic
+tie-break across writers.
 Only current choices are offered.
 
 A host MUST use one event horizon of 365 local calendar days and one
@@ -130,10 +138,10 @@ Each binding MUST provide reproducible witnesses showing history, context, and
 decay changing an observable ranking or promotion result. The compared facts
 MUST stay eligible under the horizon at both points in the decay witness. The
 binding MUST also show a promotion produced from recorded history. A
-resource-slot binding MUST show contrasting candidate histories
-changing their relative order under equal matching conditions, and show rename
-continuity. Witnesses specify the host's own outcomes, not common scores or
-thresholds.
+resource-slot binding MUST show candidate order responding to history earned
+in the slot being ranked under equal matching conditions. It MUST show
+rename continuity and isolation from a new resource at the former label or
+path. Witnesses specify the host's own outcomes, not common scores or thresholds.
 
 ## 5. Resolution and execution
 
@@ -174,79 +182,33 @@ choice.
 
 ## 7. Implementation boundary checks
 
-An implementation MUST run the applicable core cases and the following checks
-against its actual boundaries. A check for an unsupported feature does not apply.
+An implementation MUST run the applicable core cases and the following
+[boundary checks](conformance/core/README.md#host-boundary-checks) through
+its actual surfaces, execution, storage, and ranking. Checks apply where
+the binding supports the feature.
 
-- Capture on each claimed commit surface, including an action that changes the
-  working context during execution. Check the pre-execution facts at the
-  recording deadline, including surface, origin, command kind, argument
-  presence, applicable resource IDs, and exclusion of ordinary values.
-- Direct unowned native capture on every claimed surface accepting native
-  commands. Check the native root, argument presence, and committing surface.
-- A committed standalone action that fails still records exactly one intent.
-- An incomplete promotion through slot completion and leaving its prefix.
-- Nested execution and abandoned input add no goal signal.
-- Typed resource resolution, including resolved, unresolved, and ambiguous input,
-  on each text or structured surface that supports typed resource input.
-- A picked resource removed from the index before commit yields no intent or
-  execution.
-- Two resource selections in one event, each retained under its own slot ID.
-- Resource history survives each declared kind of rename.
-- A rename adds no invocation or invocation credit.
-- Ambiguous and cyclic rename mappings are rejected or safely skipped without
-  conflating resources or disturbing unrelated valid history.
-- The binding's contrasting-history witness.
-- The binding's context witness.
-- The binding's decay witness.
-- The binding's promotion witness, produced from real recorded history.
-- The binding's per-resource history and rename-continuity witnesses, if supported.
-- Resolution with availability already on and off yields the same command.
-- Unconsumed input cannot dispatch.
-- Changing only learned history leaves grammar, ownership, and availability
-  unchanged, with host state held fixed.
-- A supplied invalid ordinary slot value commits intent and never reaches the
-  handler. The log excludes the value.
-- Navigation and diagnostic activity, where supported, leave ranking and
-  promotions unchanged with derivation inputs held fixed.
-- An action unavailable after commit does not run, direct or promoted.
-- Declined destructive confirmation stops execution, direct or promoted.
-- One instrumented capability's implementation and safety policy through direct
-  and promoted execution, and through a supported flow shape if offered.
-- Each flow step checks current availability and safety, obtains required
-  confirmation, and stops on failure, unavailability, or decline.
-- A flow step with an invalid slot value never starts and the flow stops. Use a
-  second step after a successful first step when the binding supports it.
-- Persistence and replay through the actual log.
-- The 365-day horizon and backward-clock behavior, with a cutoff that crosses a
-  UTC offset change if the binding's timezone permits one.
-- Deterministic replay and results for the same inputs.
-- A deferred capture recorded by the first of readiness for another command or
-  normal termination, and before a subsequent commit; inspect at that deadline.
-- Reset with a pending capture, ensuring the old capture cannot reappear and a
-  subsequent commit can be recorded.
-- Selective reset removes seeded stored history and preserves other stored history.
-- The writer rejects a well-formed but undeclared ID before storing the record.
-- Malformed records are skipped.
-- Valid records are read without the original provider installed.
-- Storage failures are reported.
-- A moved stable node retains its history and its recorded historical edges.
-- Equal-time events retain their writer order, including across log segments.
-- Consecutive requests after a change to retained facts.
-- Consecutive requests after a change to configuration.
-- Consecutive requests after a change to the current session.
-- Consecutive requests after a change to the command inventory.
-- Consecutive requests after a change to time.
-- Consecutive requests after a change to working context.
-- Consecutive requests after a change to the frontier.
-- Consecutive requests after a change to the query.
-- Consecutive requests after a change to the resource index, where supported.
-- Consecutive requests after a change to match results.
-- Cross-surface ranking under §4's equality condition.
-- Line and cursor preservation across text handoffs.
-
-For each consecutive-request check, compare with a fresh result for the changed
-input. Choose an observable change when the binding says it affects results;
-otherwise check the declared invariant. Prime the cache first if one exists.
-When inventory or index entries are removed, require their commands, promotion
-paths, or resource choices to be absent from the next result. Synthetic cases
-do not replace these checks.
+- **Capture and commitment.** Verify commit-time facts and the recording
+  deadline on each claimed surface. Exercise unowned native capture, user
+  replay, incomplete promotions, nested execution, and abandoned input.
+  Attempt commit with an empty required ordinary slot and again after filling it.
+- **Resource identity.** Resolve typed and picked inputs against the index at
+  commit. Check two selections in one event, the per-slot usage witness,
+  continuity and isolation on rename, and rejection or safe skipping of
+  ambiguous and cyclic mappings.
+- **Resolution and execution.** Check grammar independently of availability
+  and learning, and refuse unconsumed input. Check that direct and promoted
+  submissions retain intent through execution refusals and that a committed
+  failure retains exactly one intent. Compare implementation and safety policy
+  across paths. In flows, check stopping on invalid input, failure, and
+  separately on a later step becoming unavailable or destructive.
+- **Storage and replay.** Check the actual log, deterministic replay, equal-time
+  ordering within and across writers, node moves, the calendar horizon and
+  backward clock behavior, writer validation, malformed entries, reads without
+  the provider, storage failure reporting, and both pending and selective reset.
+- **Ranking and cache freshness.** Run the binding's witnesses. Compare ranking
+  and promotions before and after navigation and diagnostic activity. Compare
+  rankings across all surfaces with equivalent requests, including surfaces
+  of the same kind. Change each applicable §4 input across consecutive
+  requests, comparing the next result with a fresh one.
+- **Text input.** Check line and cursor across handoffs, and verify that a live
+  suggestion leaves the line as typed until acceptance.

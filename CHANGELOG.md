@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+- Define semantic commit eligibility separately from execution validation.
+  Require equal underlying rankings for equal derivation inputs. Let the
+  binding declare post-acceptance cursor placement and supported flow shapes.
+- Extend conformance checks for pre-execution capture, failed actions, stale
+  resource picks, flow slot validation, native capture, learning independence,
+  writer validation, selective reset, removal from inventory, and time.
+- New cmdux gap checked at `fea859b`: explicit mapping dispatch of
+  `Buffer goto invalid` refuses execution and omits the committed intent.
+  Slot validation must block execution while retaining the filled slot ID in
+  the intent. At the same pin, a focused probe exercised `Session save`
+  directly, through a promotion from recorded history, and in the supported
+  `Flow session-save` shape. All used the same instrumented callback and the
+  declared safe policy. The per-step safety gap below still applies.
+
 ## 0.2.0
 
 - Restore the single 365-day core horizon, require per-resource learning and

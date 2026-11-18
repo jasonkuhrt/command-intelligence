@@ -45,6 +45,7 @@ def validate_core(document):
     capabilities = {item["id"]: item for item in binding["capabilities"]}
     if len(capabilities) != len(binding["capabilities"]):
         fail("core binding: duplicate capability IDs")
+    resource_actions = set()
     for node in nodes:
         if node["parent"] is not None and node["parent"] not in by_id:
             fail(f"core binding: unknown parent for {node['id']}")
@@ -54,9 +55,10 @@ def validate_core(document):
             capability = capabilities.get(node["capability"])
             if not capability or node.get("safety") != capability["safety"]:
                 fail(f"core binding: invalid capability or safety for {node['id']}")
-        for step in node.get("steps", []):
-            if step not in by_id:
-                fail(f"core binding: unknown flow step {step}")
+        if node["kind"] == "resource_slot":
+            if node["id"] not in binding["resources"]:
+                fail(f"core binding: missing candidate list for {node['id']}")
+            resource_actions.add(node["parent"])
     for slot, candidates in binding["resources"].items():
         if by_id.get(slot, {}).get("kind") != "resource_slot":
             fail(f"core binding: {slot} is not a resource slot")
@@ -78,14 +80,16 @@ def validate_core(document):
                 fail(f"{case_id}: invalid resource selection {slot}={identity}")
 
     def feature_paths(case_id, path, required):
+        installed = set()
         for node_id in path:
-            node = by_id.get(node_id)
-            if not node:
-                fail(f"{case_id}: unknown node {node_id}")
-            if node["kind"] == "resource_slot" and "resource_slots" not in required:
-                fail(f"{case_id}: resource slot needs resource_slots")
-            if node["kind"] == "flow" and "flows" not in required:
-                fail(f"{case_id}: flow needs flows")
+            while node_id is not None and node_id not in installed:
+                node = by_id.get(node_id)
+                if not node:
+                    fail(f"{case_id}: unknown node {node_id}")
+                installed.add(node_id)
+                node_id = node["parent"]
+        if installed & resource_actions and "resource_slots" not in required:
+            fail(f"{case_id}: installed action slots need resource_slots")
 
     for case in document["cases"]:
         case_id, required = case["id"], set(case["requires"])
@@ -93,6 +97,11 @@ def validate_core(document):
             if f"typed_resource_{surface}" in required and not {f"{surface}_surface", "resource_slots"} <= required:
                 fail(f"{case_id}: typed_resource_{surface} needs its surface and resource_slots")
         if case["type"] == "interaction":
+            index = {
+                slot: {candidate["id"]: candidate["label"] for candidate in candidates}
+                for slot, candidates in binding["resources"].items()
+            }
+            context = binding["context"]
             for action in case["actions"]:
                 op = action["op"]
                 if "path" in action:
@@ -103,26 +112,37 @@ def validate_core(document):
                     fail(f"{case_id}: native promotion needs native_promotions")
                 if op == "commit" and action["surface"] + "_surface" not in required:
                     fail(f"{case_id}: missing surface capability")
+                if "context_after_start" in action:
+                    if action["context_after_start"] == context:
+                        fail(f"{case_id}: execution must change the context")
+                    context = action["context_after_start"]
                 if op in ("advance", "back") and "structured_surface" not in required:
                     fail(f"{case_id}: navigation needs structured_surface")
-                if op in ("pick_resource", "type_resource"):
+                if op in ("pick_resource", "type_resource", "remove_resource"):
                     feature_paths(case_id, [action["slot"]], required)
-                    if by_id[action["slot"]]["kind"] != "resource_slot":
-                        fail(f"{case_id}: selected slot is not a resource slot")
+                    if action["slot"] not in index:
+                        fail(f"{case_id}: operation requires a resource slot")
+                    candidates = index[action["slot"]]
+                    if op in ("pick_resource", "remove_resource") and action["id"] not in candidates:
+                        fail(f"{case_id}: {action['id']} is not in the current fixture index")
+                    if op == "remove_resource":
+                        del candidates[action["id"]]
                 if op == "type_resource":
                     surface = action["surface"]
                     if f"typed_resource_{surface}" not in required:
                         fail(f"{case_id}: typed resource needs typed_resource_{surface}")
                     if not any(a["op"] == "commit" and a["surface"] == surface for a in case["actions"]):
                         fail(f"{case_id}: typed resource has no commit on its surface")
-                if op == "pick_resource":
-                    ids = {item["id"] for item in binding["resources"][action["slot"]]}
-                    if action["id"] not in ids:
-                        fail(f"{case_id}: selected resource is not in the fixture index")
-                if op == "ordinary_value" and by_id.get(action["slot"], {}).get("kind") != "ordinary_slot":
-                    fail(f"{case_id}: ordinary value needs an ordinary slot")
+                    matches = sorted(identity for identity, label in candidates.items() if label == action["text"])
+                    if matches != sorted(action["matches"]):
+                        fail(f"{case_id}: {action['text']!r} matches {matches}, expected {action['matches']}")
+                if op == "ordinary_value":
+                    feature_paths(case_id, [action["slot"]], required)
+                    if by_id[action["slot"]]["kind"] != "ordinary_slot":
+                        fail(f"{case_id}: ordinary value needs an ordinary slot")
             for item in case["expected"]["events"]:
                 event(case_id, item, required)
+            feature_paths(case_id, case["expected"]["executions"], required)
             for item in case["expected"].get("navigation", []):
                 feature_paths(case_id, [item["current"], *item["choices"]], required)
             if len(case["expected"].get("navigation", [])) != sum(
@@ -154,6 +174,8 @@ def validate_core(document):
             if "text_surface" not in required:
                 fail(f"{case_id}: text edit needs text_surface")
             for value in (case["input"], case["expected"]):
+                if "cursor" not in value:
+                    continue
                 data, cursor = value["line"].encode(), value["cursor"]
                 if cursor > len(data):
                     fail(f"{case_id}: cursor outside line")

@@ -28,19 +28,38 @@ class CoreApplicabilityTests(unittest.TestCase):
         validate_core(self.document)
 
     def test_typed_resource_expectations_follow_synthetic_matcher(self):
+        expected_matches = {
+            "typed-resource": ["alpha-id"],
+            "typed-unresolved": [],
+            "typed-ambiguous": ["one-shared", "two-shared"],
+        }
         for prefix in ("", "structured-"):
-            for name in ("typed-resource", "typed-unresolved", "typed-ambiguous"):
+            for name, matches in expected_matches.items():
                 with self.subTest(case=prefix + name):
                     case = self.case(self.document, prefix + name)
                     action = next(item for item in case["actions"] if item["op"] == "type_resource")
-                    candidates = self.document["binding"]["resources"][action["slot"]]
-                    matches = [item["id"] for item in candidates if item["label"] == action["text"]]
+                    self.assertEqual(action["matches"], matches)
                     events = case["expected"]["events"]
                     if len(matches) == 1:
+                        self.assertEqual(len(events), 1)
                         self.assertEqual(events[0]["resource_selections"], {action["slot"]: matches[0]})
                     else:
                         self.assertEqual(events, [])
                         self.assertEqual(set(case["expected"]["status"]), {"open", "refused"})
+        validate_core(self.document)
+
+    def test_typed_ambiguity_requires_both_candidates_on_each_surface(self):
+        for case_id in ("typed-ambiguous", "structured-typed-ambiguous"):
+            for remaining in (0, 1):
+                with self.subTest(case=case_id, remaining=remaining):
+                    broken = copy.deepcopy(self.document)
+                    broken["cases"] = [self.case(broken, case_id)]
+                    candidates = broken["binding"]["resources"]["Note/open/$note"]
+                    nonmatching = [candidate for candidate in candidates if candidate["label"] != "Shared"]
+                    matching = [candidate for candidate in candidates if candidate["label"] == "Shared"]
+                    candidates[:] = nonmatching + matching[:remaining]
+                    with self.assertRaisesRegex(ValueError, f"{case_id}: 'Shared' matches"):
+                        validate_core(broken)
 
     def test_universal_replay_cannot_require_resource_history(self):
         broken = copy.deepcopy(self.document)
@@ -73,11 +92,11 @@ class CoreApplicabilityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "typed_resource_structured"):
             validate_core(broken)
 
-    def test_flow_case_cannot_claim_to_be_universal(self):
+    def test_unfilled_resource_slot_still_requires_resource_support(self):
         broken = copy.deepcopy(self.document)
-        case = self.case(broken, "capability-flow-structured")
-        case["requires"].remove("flows")
-        with self.assertRaisesRegex(ValueError, "flow needs flows"):
+        case = self.case(broken, "promotion-abandoned")
+        case["requires"].remove("resource_slots")
+        with self.assertRaisesRegex(ValueError, "installed action slots need resource_slots"):
             validate_core(broken)
 
 

@@ -68,35 +68,6 @@
         "safety": "safe"
       },
       {
-        "id": "Flow",
-        "kind": "flow",
-        "parent": null,
-        "safety": "safe",
-        "steps": [
-          "flow.a",
-          "flow.b",
-          "flow.c"
-        ]
-      },
-      {
-        "id": "flow.a",
-        "kind": "action",
-        "parent": null,
-        "safety": "safe"
-      },
-      {
-        "id": "flow.b",
-        "kind": "action",
-        "parent": null,
-        "safety": "destructive"
-      },
-      {
-        "id": "flow.c",
-        "kind": "action",
-        "parent": null,
-        "safety": "safe"
-      },
-      {
         "id": "Note/archive",
         "kind": "action",
         "parent": "Note",
@@ -152,15 +123,6 @@
         "kind": "resource_slot",
         "parent": "Note/compare",
         "required": true
-      },
-      {
-        "id": "SharedFlow",
-        "kind": "flow",
-        "parent": null,
-        "safety": "destructive",
-        "steps": [
-          "Note/delete"
-        ]
       }
     ],
     "resources": {
@@ -308,6 +270,50 @@
       }
     },
     {
+      "id": "stale-picked-resource",
+      "description": "A picked ID removed from the current index before commit yields no intent or execution.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface",
+        "resource_slots"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/open"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "pick_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "remove_resource",
+          "slot": "Note/open/$note",
+          "id": "alpha-id"
+        },
+        {
+          "op": "commit",
+          "surface": "structured"
+        }
+      ],
+      "expected": {
+        "events": [],
+        "executions": [],
+        "status": [
+          "open",
+          "refused"
+        ],
+        "forbidden_text": [
+          "Alpha note"
+        ]
+      }
+    },
+    {
       "id": "promotion-slot-origin",
       "description": "Filling a promoted path preserves shortcut origin.",
       "type": "interaction",
@@ -371,7 +377,7 @@
           "op": "choose",
           "path": [
             "Note",
-            "Note/open"
+            "Note/rename"
           ],
           "via": "promotion"
         },
@@ -611,7 +617,10 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Alpha note",
-          "surface": "text"
+          "surface": "text",
+          "matches": [
+            "alpha-id"
+          ]
         },
         {
           "op": "commit",
@@ -665,7 +674,10 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Alpha note",
-          "surface": "text"
+          "surface": "text",
+          "matches": [
+            "alpha-id"
+          ]
         },
         {
           "op": "commit",
@@ -699,7 +711,7 @@
     },
     {
       "id": "typed-unresolved",
-      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "description": "A typed label with no candidate does not commit or persist.",
       "type": "interaction",
       "requires": [
         "text_surface",
@@ -719,7 +731,8 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Absent",
-          "surface": "text"
+          "surface": "text",
+          "matches": []
         },
         {
           "op": "commit",
@@ -740,7 +753,7 @@
     },
     {
       "id": "typed-ambiguous",
-      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "description": "A typed label matching two distinct IDs does not commit or persist.",
       "type": "interaction",
       "requires": [
         "text_surface",
@@ -760,7 +773,11 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Shared",
-          "surface": "text"
+          "surface": "text",
+          "matches": [
+            "one-shared",
+            "two-shared"
+          ]
         },
         {
           "op": "commit",
@@ -792,7 +809,8 @@
           "op": "choose",
           "path": [
             "Note",
-            "Note/move"
+            "Note/move",
+            "Note/move/$mode"
           ],
           "via": "direct"
         },
@@ -800,6 +818,12 @@
           "op": "ordinary_value",
           "slot": "Note/move/$mode",
           "text": "private mode"
+        },
+        {
+          "op": "advance"
+        },
+        {
+          "op": "advance"
         },
         {
           "op": "pick_resource",
@@ -835,6 +859,16 @@
         "forbidden_text": [
           "private mode",
           "Alpha note"
+        ],
+        "navigation": [
+          {
+            "current": "Note/move/$tag",
+            "choices": []
+          },
+          {
+            "current": "Note/move/$note",
+            "choices": []
+          }
         ]
       }
     },
@@ -865,7 +899,10 @@
           "op": "type_resource",
           "slot": "Note/move/$note",
           "text": "Alpha note",
-          "surface": "text"
+          "surface": "text",
+          "matches": [
+            "alpha-id"
+          ]
         },
         {
           "op": "commit",
@@ -1212,248 +1249,6 @@
       }
     },
     {
-      "id": "flow-unavailable",
-      "description": "A flow stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "structured_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "structured",
-          "unavailable_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "structured",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a"
-        ]
-      }
-    },
-    {
-      "id": "flow-confirmation",
-      "description": "A flow stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "structured_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "structured",
-          "declined_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "structured",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a"
-        ]
-      }
-    },
-    {
-      "id": "flow-failure",
-      "description": "A flow stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "structured_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "structured",
-          "failed_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "structured",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a",
-          "flow.b"
-        ]
-      }
-    },
-    {
-      "id": "text-flow-unavailable",
-      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "text_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "text",
-          "unavailable_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "text",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a"
-        ]
-      }
-    },
-    {
-      "id": "text-flow-confirmation",
-      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "text_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "text",
-          "declined_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "text",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a"
-        ]
-      }
-    },
-    {
-      "id": "text-flow-failure",
-      "description": "A flow dispatched from text stops at an unavailable, declined, or failed step.",
-      "type": "interaction",
-      "requires": [
-        "text_surface",
-        "flows"
-      ],
-      "actions": [
-        {
-          "op": "choose",
-          "path": [
-            "Flow"
-          ],
-          "via": "direct"
-        },
-        {
-          "op": "commit",
-          "surface": "text",
-          "failed_step": "flow.b"
-        }
-      ],
-      "expected": {
-        "events": [
-          {
-            "surface": "text",
-            "origin": "direct",
-            "command_kind": "semantic",
-            "recorded_path": [
-              "Flow"
-            ],
-            "arguments_present": false,
-            "resource_selections": {}
-          }
-        ],
-        "executions": [
-          "flow.a",
-          "flow.b"
-        ]
-      }
-    },
-    {
       "id": "edit-middle",
       "description": "Accepting a nested choice replaces the whole token at the cursor and preserves following spacing and text.",
       "type": "edit",
@@ -1467,8 +1262,7 @@
         "text": "rename"
       },
       "expected": {
-        "line": "Tree refactor rename  tail",
-        "cursor": 20
+        "line": "Tree refactor rename  tail"
       }
     },
     {
@@ -1485,7 +1279,6 @@
         "text": "Tree"
       },
       "expected": {
-        "cursor": 4,
         "line": "Tree  tail"
       }
     },
@@ -1503,7 +1296,6 @@
         "text": "rename"
       },
       "expected": {
-        "cursor": 20,
         "line": "Tree refactor rename|Pulse"
       }
     },
@@ -1521,7 +1313,6 @@
         "text": "OldNote"
       },
       "expected": {
-        "cursor": 17,
         "line": "Note open OldNote  tail"
       }
     },
@@ -1539,7 +1330,6 @@
         "text": "rename"
       },
       "expected": {
-        "cursor": 20,
         "line": "Tree refactor rename  tail"
       }
     },
@@ -1567,7 +1357,7 @@
       "type": "cutoff",
       "requires": [],
       "input": {
-        "now": "2031-04-06T15:15:00Z"
+        "now": "2031-03-09T15:15:00Z"
       },
       "expected": {
         "at_cutoff_eligible": true,
@@ -1684,7 +1474,10 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Alpha note",
-          "surface": "structured"
+          "surface": "structured",
+          "matches": [
+            "alpha-id"
+          ]
         },
         {
           "op": "commit",
@@ -1718,7 +1511,7 @@
     },
     {
       "id": "structured-typed-unresolved",
-      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "description": "A typed label with no candidate does not commit or persist.",
       "type": "interaction",
       "requires": [
         "structured_surface",
@@ -1738,7 +1531,8 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Absent",
-          "surface": "structured"
+          "surface": "structured",
+          "matches": []
         },
         {
           "op": "commit",
@@ -1759,7 +1553,7 @@
     },
     {
       "id": "structured-typed-ambiguous",
-      "description": "An unresolved or ambiguous resource value does not commit or persist.",
+      "description": "A typed label matching two distinct IDs does not commit or persist.",
       "type": "interaction",
       "requires": [
         "structured_surface",
@@ -1779,7 +1573,11 @@
           "op": "type_resource",
           "slot": "Note/open/$note",
           "text": "Shared",
-          "surface": "structured"
+          "surface": "structured",
+          "matches": [
+            "one-shared",
+            "two-shared"
+          ]
         },
         {
           "op": "commit",
@@ -1983,7 +1781,7 @@
     },
     {
       "id": "ordinary-invalid",
-      "description": "An invalid ordinary slot value cannot commit or dispatch.",
+      "description": "A supplied invalid ordinary value records intent and never reaches the handler.",
       "type": "interaction",
       "requires": [
         "structured_surface"
@@ -2009,12 +1807,21 @@
         }
       ],
       "expected": {
-        "events": [],
-        "executions": [],
-        "status": [
-          "open",
-          "refused"
+        "events": [
+          {
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/rename",
+              "Note/rename/$name"
+            ],
+            "arguments_present": true,
+            "resource_selections": {}
+          }
         ],
+        "executions": [],
         "forbidden_text": [
           "Invalid name"
         ]
@@ -2235,25 +2042,27 @@
       }
     },
     {
-      "id": "capability-flow-text",
-      "description": "A flow step uses the same instrumented capability and safety policy.",
+      "id": "capture-before-context-change-text",
+      "description": "A context change inside the handler leaves the captured context at its commit value.",
       "type": "interaction",
       "requires": [
-        "text_surface",
-        "flows"
+        "text_surface"
       ],
       "actions": [
         {
           "op": "choose",
           "path": [
-            "SharedFlow"
+            "Note",
+            "Note/edit"
           ],
           "via": "direct"
         },
         {
           "op": "commit",
           "surface": "text",
-          "confirmation": "accept"
+          "context_after_start": {
+            "kind": "settings"
+          }
         }
       ],
       "expected": {
@@ -2263,22 +2072,56 @@
             "origin": "direct",
             "command_kind": "semantic",
             "recorded_path": [
-              "SharedFlow"
+              "Note",
+              "Note/edit"
             ],
             "arguments_present": false,
             "resource_selections": {}
           }
         ],
         "executions": [
-          "Note/delete"
-        ],
-        "capabilities": [
+          "Note/edit"
+        ]
+      }
+    },
+    {
+      "id": "failed-committed-action-text",
+      "description": "A standalone handler starts and fails, and its committed intent is recorded exactly once.",
+      "type": "interaction",
+      "requires": [
+        "text_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "text",
+          "fails": true
+        }
+      ],
+      "expected": {
+        "events": [
           {
-            "id": "delete",
-            "implementation": "delete-handler",
-            "policy": "confirm-delete",
-            "safety": "destructive"
+            "surface": "text",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
           }
+        ],
+        "executions": [
+          "Note/edit"
         ]
       }
     },
@@ -2363,25 +2206,27 @@
       }
     },
     {
-      "id": "capability-flow-structured",
-      "description": "A flow step uses the same instrumented capability and safety policy.",
+      "id": "capture-before-context-change-structured",
+      "description": "A context change inside the handler leaves the captured context at its commit value.",
       "type": "interaction",
       "requires": [
-        "structured_surface",
-        "flows"
+        "structured_surface"
       ],
       "actions": [
         {
           "op": "choose",
           "path": [
-            "SharedFlow"
+            "Note",
+            "Note/edit"
           ],
           "via": "direct"
         },
         {
           "op": "commit",
           "surface": "structured",
-          "confirmation": "accept"
+          "context_after_start": {
+            "kind": "settings"
+          }
         }
       ],
       "expected": {
@@ -2391,22 +2236,56 @@
             "origin": "direct",
             "command_kind": "semantic",
             "recorded_path": [
-              "SharedFlow"
+              "Note",
+              "Note/edit"
             ],
             "arguments_present": false,
             "resource_selections": {}
           }
         ],
         "executions": [
-          "Note/delete"
-        ],
-        "capabilities": [
+          "Note/edit"
+        ]
+      }
+    },
+    {
+      "id": "failed-committed-action-structured",
+      "description": "A standalone handler starts and fails, and its committed intent is recorded exactly once.",
+      "type": "interaction",
+      "requires": [
+        "structured_surface"
+      ],
+      "actions": [
+        {
+          "op": "choose",
+          "path": [
+            "Note",
+            "Note/edit"
+          ],
+          "via": "direct"
+        },
+        {
+          "op": "commit",
+          "surface": "structured",
+          "fails": true
+        }
+      ],
+      "expected": {
+        "events": [
           {
-            "id": "delete",
-            "implementation": "delete-handler",
-            "policy": "confirm-delete",
-            "safety": "destructive"
+            "surface": "structured",
+            "origin": "direct",
+            "command_kind": "semantic",
+            "recorded_path": [
+              "Note",
+              "Note/edit"
+            ],
+            "arguments_present": false,
+            "resource_selections": {}
           }
+        ],
+        "executions": [
+          "Note/edit"
         ]
       }
     }

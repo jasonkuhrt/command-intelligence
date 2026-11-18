@@ -5,6 +5,9 @@ keeping the command vocabulary, execution, and user input under explicit control
 It applies to command lines, pickers, palettes, and other hosts with a semantic
 command model.
 
+Read it rendered at https://jasonkuhrt.github.io/command-intelligence/ (built with
+[spec-md](https://github.com/leebyron/spec-md) by `just site`).
+
 - [Specification](SPEC.md): the normative, tool-independent guarantees.
 - [Reference algorithm](REFERENCE.md): optional scoring, promotion, and flows.
 - [Host bindings](BINDINGS.md): decisions each implementation supplies, with a

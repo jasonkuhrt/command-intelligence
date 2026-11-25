@@ -1,4 +1,4 @@
-# Command Intelligence Specification 0.4.0
+# Command Intelligence Specification 0.4.1
 
 ## 1. Conformance and bindings
 

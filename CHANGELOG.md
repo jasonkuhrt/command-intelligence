@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- `BINDINGS.md` lists the binding rows only. Each implementation documents its
+  own choices in its own binding document; cmdux declares 0.4.0 in its
+  `BINDING.md`, which supersedes the cmdux gaps listed under 0.2.0 to 0.4.0.
+
 ## 0.4.0
 
 - Keep resource IDs reserved while retained intent or rename mappings refer to
